@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SalmanFX Bot</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0c10; color: #e8eaf0; font-family: 'Courier New', monospace; min-height: 100vh; padding-bottom: 80px; }
+.header { background: #111318; border-bottom: 1px solid #1e2530; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+.content { padding: 16px; }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.stat-card { background: #111318; border: 1px solid #1e2530; border-radius: 12px; padding: 14px 16px; }
+.card { background: #111318; border: 1px solid #1e2530; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; }
+.log-body { padding: 10px 14px; max-height: 150px; overflow-y: auto; font-size: 11px; line-height: 1.8; }
+.trade-row { background: #0a0c10; border: 1px solid #1e2530; border-radius: 8px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.tab-bar { display: flex; gap: 5px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 4px; }
+.tab { background: #111318; border: 1px solid #1e2530; border-radius: 8px; padding: 7px 12px; font-size: 10px; color: #555; cursor: pointer; white-space: nowrap; font-family: 'Courier New', monospace; font-weight: 700; flex-shrink: 0; }
+.tab.active { background: #00d4aa22; color: #00d4aa; border-color: #00d4aa44; }
+.history-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #1e2530; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.filter-bar { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 2px; }
+.filter-btn { background: #0a0c10; border: 1px solid #1e2530; border-radius: 20px; padding: 5px 12px; font-size: 10px; color: #555; cursor: pointer; white-space: nowrap; font-family: 'Courier New', monospace; font-weight: 700; flex-shrink: 0; }
+.filter-btn.active { background: #5588ff22; color: #5588ff; border-color: #5588ff44; }
+.wa-float { position: fixed; bottom: 20px; right: 16px; background: #25d366; border-radius: 50%; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; font-size: 28px; text-decoration: none; box-shadow: 0 4px 24px #25d36688; z-index: 999; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{box-shadow:0 4px 24px #25d36666} 50%{box-shadow:0 4px 32px #25d366cc} }
+
+/* WhatsApp banner */
+.wa-banner { display: flex; align-items: center; gap: 0; background: #25d366; border-radius: 14px; margin-bottom: 12px; overflow: hidden; text-decoration: none; box-shadow: 0 4px 20px #25d36644; }
+.wa-banner-left { background: #128c7e; padding: 14px 16px; display: flex; align-items: center; justify-content: center; }
+.wa-banner-mid { flex: 1; padding: 12px 14px; }
+.wa-banner-right { padding: 14px 16px; display: flex; align-items: center; }
+
+/* Pricing cards */
+.price-card { border-radius: 14px; padding: 16px; margin-bottom: 10px; position: relative; overflow: hidden; }
+.price-card.mt4 { background: linear-gradient(135deg, #0d2a1e, #0a1520); border: 1px solid #00d4aa33; }
+.price-card.featured { background: linear-gradient(135deg, #1a2a0d, #0d1a2e); border: 2px solid #00d4aa; }
+.price-card.mt5 { background: linear-gradient(135deg, #0d1a2e, #1a0d2e); border: 1px solid #5588ff33; }
+.price-card.partner { background: linear-gradient(135deg, #2a1a0d, #1a0d1a); border: 1px solid #ff993344; }
+.plan-badge { display: inline-block; border-radius: 20px; padding: 3px 10px; font-size: 10px; font-weight: 700; margin-bottom: 8px; }
+.best-badge { position: absolute; top: 14px; right: 14px; background: #00d4aa; color: #000; border-radius: 20px; padding: 3px 10px; font-size: 10px; font-weight: 700; }
+.price-big { font-size: 28px; font-weight: 700; margin: 6px 0 4px; }
+.price-note { font-size: 10px; color: #555; margin-bottom: 10px; }
+.feature-list { list-style: none; }
+.feature-list li { font-size: 11px; color: #aaa; padding: 3px 0; }
+.feature-list li::before { content: '✅ '; }
+.feature-list li.warn::before { content: '⚠️ '; }
+.feature-list li.cross::before { content: '❌ '; color: #ff4444; }
+.wa-btn { display: block; background: #25d366; color: #000; border: none; border-radius: 8px; padding: 10px; text-align: center; font-weight: 700; font-size: 12px; text-decoration: none; cursor: pointer; margin-top: 12px; font-family: 'Courier New', monospace; letter-spacing: 1px; }
+.discount-bar { background: linear-gradient(135deg, #ff990022, #ff660022); border: 1px solid #ff993344; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; display: flex; gap: 10px; align-items: center; }
+.partner-card { background: linear-gradient(135deg, #1a1000, #0d1a00); border: 1px solid #ffaa0044; border-radius: 14px; padding: 16px; margin-bottom: 10px; }
+.divider { border: none; border-top: 1px solid #1e2530; margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex;align-items:center;gap:10px">
+    <span style="font-size:22px">🤖</span>
+    <div>
+      <div style="color:#00d4aa;font-weight:700;font-size:15px;letter-spacing:1px">SALMANFX</div>
+      <div style="color:#555;font-size:10px;letter-spacing:2px">PUBLIC SIGNAL MONITOR</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span style="background:#00d4aa22;color:#00d4aa;border:1px solid #00d4aa44;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700">⬤ LIVE</span>
+    <span style="color:#555;font-size:10px">MT4 • Exness</span>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- TikTok Banner -->
+  <div style="background:linear-gradient(135deg,#ff004418,#00f2ea18);border:1px solid #ff004444;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:center">
+    <span style="font-size:20px">🎵</span>
+    <div style="flex:1">
+      <div style="color:#ff6688;font-size:12px;font-weight:700">🔴 LIVE on TikTok!</div>
+      <div style="color:#555;font-size:11px">Watch me trade live — follow for signals</div>
+    </div>
+  </div>
+
+  <!-- WhatsApp Big Banner -->
+  <a href="https://wa.me/971544735060?text=Hi%20Salman!%20I%20saw%20your%20trading%20bot%20on%20TikTok%20and%20I%27m%20interested!" class="wa-banner">
+    <div class="wa-banner-left">
+      <span style="font-size:28px">💬</span>
+    </div>
+    <div class="wa-banner-mid">
+      <div style="color:#fff;font-weight:700;font-size:15px;letter-spacing:0.5px">+971 54 473 5060</div>
+      <div style="color:#d4f5e0;font-size:11px;margin-top:2px">💬 Tap to WhatsApp Salman now</div>
+    </div>
+    <div class="wa-banner-right">
+      <span style="font-size:22px;color:#fff">→</span>
+    </div>
+  </a>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('live',this)">⚡ Live</div>
+    <div class="tab" onclick="switchTab('history',this)">📋 History</div>
+    <div class="tab" onclick="switchTab('stats',this)">📊 Stats</div>
+    <div class="tab" onclick="switchTab('pricing',this)">💰 Pricing</div>
+    <div class="tab" onclick="switchTab('partner',this)">🤝 Partner</div>
+    <div class="tab" onclick="switchTab('about',this)">ℹ️ About</div>
+  </div>
+
+  <!-- ===== LIVE TAB ===== -->
+  <div id="tab-live" class="tab-content active">
+    <div class="stats-grid">
+      <div class="stat-card"><div style="color:#555;font-size:11px;margin-bottom:4px">📊 Trades</div><div id="s-trades" style="color:#aaa;font-size:22px;font-weight:700">0</div></div>
+      <div class="stat-card"><div style="color:#555;font-size:11px;margin-bottom:4px">🎯 Win Rate</div><div id="s-wr" style="color:#00d4aa;font-size:22px;font-weight:700">0%</div></div>
+      <div class="stat-card"><div style="color:#555;font-size:11px;margin-bottom:4px">💵 Total Profit</div><div id="s-profit" style="color:#00d4aa;font-size:22px;font-weight:700">+$0.00</div></div>
+      <div class="stat-card"><div style="color:#555;font-size:11px;margin-bottom:4px">🔥 Today</div><div id="s-today" style="color:#00d4aa;font-size:22px;font-weight:700">+$0.00</div></div>
+    </div>
+    <div id="current-card" style="display:none;background:linear-gradient(135deg,#0d2a1e,#0a1a2e);border:1px solid #1e4030;border-radius:12px;padding:14px 16px;margin-bottom:12px">
+      <div style="color:#555;font-size:11px;margin-bottom:8px">⚡ LATEST TRADE</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span id="ct-dir" style="border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700"></span>
+            <span id="ct-pair" style="color:#fff;font-size:15px;font-weight:700"></span>
+          </div>
+          <div id="ct-prices" style="color:#555;font-size:11px"></div>
+        </div>
+        <div style="text-align:right">
+          <div id="ct-profit" style="font-size:18px;font-weight:700"></div>
+          <div id="ct-result" style="font-size:11px;font-weight:700"></div>
+        </div>
+      </div>
+      <div style="background:#ffffff08;border-radius:6px;height:3px;overflow:hidden">
+        <div id="wr-bar" style="background:linear-gradient(90deg,#00d4aa,#0099ff);height:100%;width:0%;transition:width 0.8s"></div>
+      </div>
+    </div>
+    <div id="recent-section" style="display:none;margin-bottom:12px">
+      <div style="color:#555;font-size:11px;letter-spacing:1px;margin-bottom:8px">📋 RECENT TRADES</div>
+      <div id="trades-list"></div>
+    </div>
+    <div style="background:#0a0c10;border:1px solid #1e2530;border-radius:12px;overflow:hidden;margin-bottom:12px">
+      <div style="padding:10px 14px;border-bottom:1px solid #1e2530;display:flex;justify-content:space-between">
+        <span style="color:#aaa;font-size:12px;font-weight:700">🖥 Bot Activity</span>
+        <span id="log-count" style="color:#555;font-size:11px">0 entries</span>
+      </div>
+      <div class="log-body" id="log-body"><div style="color:#333;font-style:italic">Starting bot feed...</div></div>
+    </div>
+  </div>
+
+  <!-- ===== HISTORY TAB ===== -->
+  <div id="tab-history" class="tab-content">
+    <div class="filter-bar">
+      <div class="filter-btn active" onclick="filterHistory('today',this)">📅 Today</div>
+      <div class="filter-btn" onclick="filterHistory('yesterday',this)">◀ Yesterday</div>
+      <div class="filter-btn" onclick="filterHistory('day3',this)">◀◀ 2 Days Ago</div>
+      <div class="filter-btn" onclick="filterHistory('week',this)">📆 This Week</div>
+      <div class="filter-btn" onclick="filterHistory('month',this)">🗓 This Month</div>
+      <div class="filter-btn" onclick="filterHistory('all',this)">📋 All Time</div>
+    </div>
+    <div style="background:#111318;border:1px solid #1e2530;border-radius:10px;padding:10px 16px;margin-bottom:12px;display:flex;gap:20px;flex-wrap:wrap">
+      <div><div style="color:#555;font-size:10px">Trades</div><div id="flt-count" style="color:#aaa;font-weight:700;font-size:18px">0</div></div>
+      <div><div style="color:#555;font-size:10px">Win Rate</div><div id="flt-wr" style="color:#00d4aa;font-weight:700;font-size:18px">0%</div></div>
+      <div><div style="color:#555;font-size:10px">Profit</div><div id="flt-profit" style="color:#00d4aa;font-weight:700;font-size:18px">$0.00</div></div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div id="full-history" style="padding:0 16px"></div>
+      <div id="no-history" style="color:#333;font-size:12px;text-align:center;padding:30px">No trades in this period yet...</div>
+    </div>
+  </div>
+
+  <!-- ===== STATS TAB ===== -->
+  <div id="tab-stats" class="tab-content">
+    <div class="card" style="margin-bottom:10px">
+      <div style="color:#aaa;font-size:12px;font-weight:700;margin-bottom:14px">📊 All-Time Performance</div>
+      <div class="history-row"><span style="color:#555;font-size:12px">🏆 Best Trade</span><span id="st-best" style="color:#00d4aa;font-weight:700">—</span></div>
+      <div class="history-row"><span style="color:#555;font-size:12px">💔 Worst Trade</span><span id="st-worst" style="color:#ff4444;font-weight:700">—</span></div>
+      <div class="history-row"><span style="color:#555;font-size:12px">📈 Winning</span><span id="st-wins" style="color:#00d4aa;font-weight:700">0</span></div>
+      <div class="history-row"><span style="color:#555;font-size:12px">📉 Losing</span><span id="st-losses" style="color:#ff4444;font-weight:700">0</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0"><span style="color:#555;font-size:12px">💰 Avg/Trade</span><span id="st-avg" style="color:#aaa;font-weight:700">—</span></div>
+    </div>
+    <div class="card">
+      <div style="color:#aaa;font-size:12px;font-weight:700;margin-bottom:12px">🎯 Pairs Breakdown</div>
+      <div id="pairs-stats"><div style="color:#333;font-size:12px">Waiting for data...</div></div>
+    </div>
+  </div>
+
+  <!-- ===== PRICING TAB ===== -->
+  <div id="tab-pricing" class="tab-content">
+
+    <!-- Exness Discount Banner -->
+    <div class="discount-bar">
+      <span style="font-size:22px">🎁</span>
+      <div>
+        <div style="color:#ffaa00;font-size:12px;font-weight:700">20% DISCOUNT — Use My Exness Link!</div>
+        <div style="color:#555;font-size:11px">Open & continue with Salman's Exness referral → get 20% off any plan, lifetime 🔥</div>
+      </div>
+    </div>
+
+    <!-- MT4 Robot -->
+    <div style="color:#00d4aa;font-size:11px;font-weight:700;letter-spacing:2px;margin-bottom:8px">📈 MT4 SALMANFX ROBOT</div>
+
+    <div class="price-card mt4">
+      <span class="plan-badge" style="background:#00d4aa22;color:#00d4aa;border:1px solid #00d4aa44">Monthly</span>
+      <div class="price-big" style="color:#00d4aa">$200 <span style="font-size:13px;color:#555">/ month</span></div>
+      <div class="price-note">~$6.67/day</div>
+      <ul class="feature-list">
+        <li>Full MT4 Robot Access</li>
+        <li>Live support during setup</li>
+        <li class="warn">No source code included</li>
+      </ul>
+      <a href="https://wa.me/971544735060?text=Hi%20Salman!%20I%20want%20the%20MT4%20Monthly%20plan%20-%20$200" class="wa-btn">💬 Get Monthly — $200</a>
+    </div>
+
+    <div class="price-card featured">
+      <div class="best-badge">🔥 BEST VALUE</div>
+      <span class="plan-badge" style="background:#00d4aa33;color:#00d4aa;border:1px solid #00d4aa">3 Months</span>
+      <div class="price-big" style="color:#00d4aa">$500 <span style="font-size:13px;color:#555">/ 3 months</span></div>
+      <div class="price-note">Save $100 vs monthly</div>
+      <ul class="feature-list">
+        <li>Full MT4 Robot Access</li>
+        <li>Priority support</li>
+        <li>Strategy updates included</li>
+        <li class="warn">No source code included</li>
+      </ul>
+      <a href="https://wa.me/971544735060?text=Hi%20Salman!%20I%20want%20the%20MT4%203-Month%20plan%20-%20$500" class="wa-btn">💬 Get 3 Months — $500</a>
+    </div>
+
+    <div class="price-card mt4">
+      <span class="plan-badge" style="background:#5588ff22;color:#5588ff;border:1px solid #5588ff44">6 Months</span>
+      <div class="price-big" style="color:#5588ff">$1,000 <span style="font-size:13px;color:#555">/ 6 months</span></div>
+      <div class="price-note">Save $200 vs monthly</div>
+      <ul class="feature-list">
+        <li>Full MT4 Robot Access</li>
+        <li>Priority support</li>
+        <li>All future updates</li>
+        <li class="warn">No source code included</li>
+      </ul>
+      <a href="https://wa.me/971544735060?text=Hi%20Salman!%20I%20want%20the%20MT4%206-Month%20plan%20-%20$1000" class="wa-btn">💬 Get 6 Months — $1,000</a>
+    </div>
+
+    <div class="price-card mt4">
+      <span class="plan-badge" style="background:#ff993322;color:#ff9933;border:1px solid #ff993344">Yearly</span>
+      <div class="price-big" style="color:#ff9933">$1,800 <span style="font-size:13px;color:#555">/ year</span></div>
+      <div class="price-note">Save $600 vs monthly</div>
+      <ul class="feature-list">
+        <li>Full MT4 Robot Access</li>
+        <li>VIP priority support</li>
+        <li>All future updates</li>
+        <li>Free setup explanation session</li>
+        <li class="warn">No source code included</li>
+      </ul>
+      <a href="https://wa.me/971544735060?text=Hi%20Salman!%20I%20want%20the%20MT4%20Yearly%20plan%20-%20$1800" class="wa-btn">💬 Get Yearly — $1,800</a>
+    </div>
+
+    <div class="price-card" style="background:linear-gradient(135deg,#1a0a00,#001a1a);border:1px solid #ff993366;margin-bottom:10px">
+      <span class="plan-badge" style="background:#ff993333;color:#ff9933;border:1px solid #ff9933">💎 Lifetime</span>
+      <div class="price-big" style="color:#ff9933">$10,000</div>
+      <div class="price-note">One-time payment — own it forever</div>
+      <ul class="feature-list">
+        <li>Lifetime MT4 Robot license</li>
+        <li>All future updates forever</li>
+        <li>VIP support always</li>
+        <li class="cross">Source code NOT included</li>
+      </ul>
+      <a href="https://wa.me/971544735060?text=Hi%20Salman!%20I%27m%20interested%20in%20the%20Lifetime%20MT4%20deal%20-%20$10000" class="wa-btn">💬 Inquire Lifetime — $10,000</a>
+    </div>
+
+    <hr class="divider" style="margin:16px 0">
+
+    <!-- MT5 -->
+    <div style="color:#5588ff;font-size:11px;font-weight:700;letter-spacing:2px;margin-bottom:8px">📊 MT5 SALMANFX ROBOT</div>
+
+    <div class="price-card mt5">
+      <span class="plan-badge" style="background:#5588ff22;color:#5588ff;border:1px solid #5588ff44">Lifetime Only</span>
+      <div class="price-big" style="color:#5588ff">$1,300 <span style="font-size:13px;color:#555">one-time</span></div>
+      <div class="price-note">No monthly plan — single payment only</div>
+      <ul class="feature-list">
+        <li>MT5 Robot (.ex5 file)</li>
+        <li>Works on Exness MT5</li>
+        <li>All future updates</li>
+        <li class="cross">Source code NOT available (ever)</li>
+        <li class="cross">No monthly subscription option</li>
+      </ul>
+      <a href="https://wa.me/971544735060?text=Hi%20Salman!%20I%20want%20the%20MT5%20Robot%20-%20$1300" class="wa-btn">💬 Get MT5 Robot — $1,300</a>
+    </div>
+
+    <hr class="divider" style="margin:16px 0">
+
+    <!-- Setup Explanation -->
+    <div style="color:#ffaa00;font-size:11px;font-weight:700;letter-spacing:2px;margin-bottom:8px">🎓 SETUP EXPLANATION SESSION</div>
+    <div class="price-card" style="background:linear-gradient(135deg,#1a1200,#0a1000);border:1px solid #ffaa0044;margin-bottom:16px">
+      <span class="plan-badge" style="background:#ffaa0022;color:#ffaa00;border:1px solid #ffaa0044">MT4 & MT5</span>
+      <div class="price-big" style="color:#ffaa00">$200 <span style="font-size:13px;color:#555">per session</span></div>
+      <div style="background:#ffaa0011;border:1px solid #ffaa0033;border-radius:8px;padding:10px 12px;margin:10px 0">
+        <div style="color:#ffaa00;font-size:12px;font-weight:700;margin-bottom:4px">⚠️ IMPORTANT NOTE</div>
+        <div style="color:#aaa;font-size:11px;line-height:1.7">Without this setup explanation, even if you have the robot, you <span style="color:#ff6644;font-weight:700">WILL lose money</span>. After the 1-on-1 explanation session with Salman, your win rate will be <span style="color:#00d4aa;font-weight:700">above 95%</span>.</div>
+      </div>
+      <ul class="feature-list">
+        <li>1-on-1 session with Salman</li>
+        <li>Full configuration walkthrough</li>
+        <li>Strategy & settings explained</li>
+        <li>Live trading guidance</li>
+        <li>Post-session support</li>
+      </ul>
+      <a href="https://wa.me/971544735060?text=Hi%20Salman!%20I%20want%20to%20book%20a%20Setup%20Explanation%20session%20-%20$200" class="wa-btn">💬 Book Session — $200</a>
+    </div>
+  </div>
+
+  <!-- ===== PARTNER TAB ===== -->
+  <div id="tab-partner" class="tab-content">
+
+    <div class="partner-card" style="margin-bottom:12px">
+      <div style="font-size:28px;margin-bottom:8px">🤝</div>
+      <div style="color:#ffaa00;font-size:16px;font-weight:700;margin-bottom:4px">Account Management</div>
+      <div style="color:#555;font-size:11px;margin-bottom:14px">Let Salman's AI Bot trade your account</div>
+
+      <div style="background:#ffaa0011;border:1px solid #ffaa0033;border-radius:10px;padding:12px;margin-bottom:14px;text-align:center">
+        <div style="color:#555;font-size:11px;margin-bottom:4px">Profit Sharing Split</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-top:6px">
+          <div>
+            <div style="color:#00d4aa;font-size:32px;font-weight:700">70%</div>
+            <div style="color:#555;font-size:11px">You Keep</div>
+          </div>
+          <div style="color:#333;font-size:24px">|</div>
+          <div>
+            <div style="color:#ffaa00;font-size:32px;font-weight:700">30%</div>
+            <div style="color:#555;font-size:11px">Salman's Fee</div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="feature-list" style="margin-bottom:14px">
+        <li>Salman manages your Exness account</li>
+        <li>AI Bot runs 24/5 automatically</li>
+        <li>You withdraw profits anytime</li>
+        <li>Full transparency — live dashboard</li>
+        <li>No monthly fee — profit share only</li>
+        <li>Minimum deposit: discuss with Salman</li>
+      </ul>
+
+      <div style="background:#00d4aa11;border:1px solid #00d4aa33;border-radius:8px;padding:10px 12px;margin-bottom:14px">
+        <div style="color:#00d4aa;font-size:11px;font-weight:700;margin-bottom:4px">💡 Example</div>
+        <div style="color:#aaa;font-size:11px;line-height:1.8">
+          You deposit $5,000 → Bot earns $1,000 profit<br>
+          <span style="color:#00d4aa">You receive: <strong>$700</strong></span><br>
+          <span style="color:#ffaa00">Salman's fee: <strong>$300</strong></span>
+        </div>
+      </div>
+
+      <a href="https://wa.me/971544735060?text=Hi%20Salman!%20I%27m%20interested%20in%20account%20management%20partnership%20(30%25%20profit%20share)" class="wa-btn">💬 Start Partnership — WhatsApp Salman</a>
+    </div>
+
+    <!-- Exness referral bonus -->
+    <div class="discount-bar">
+      <span style="font-size:22px">🔗</span>
+      <div>
+        <div style="color:#ffaa00;font-size:12px;font-weight:700">Bonus: Open via Salman's Exness Link</div>
+        <div style="color:#555;font-size:11px">Get 20% off any robot plan + priority partnership access 🚀</div>
+      </div>
+    </div>
+
+    <div style="color:#333;font-size:10px;text-align:center;line-height:1.7;padding:8px">⚠️ Trading involves risk. The 30% fee applies to profits only — no profit, no fee. Salman does not guarantee profits.</div>
+  </div>
+
+  <!-- ===== ABOUT TAB ===== -->
+  <div id="tab-about" class="tab-content">
+    <div class="card" style="margin-bottom:10px">
+      <div style="font-size:30px;margin-bottom:8px">🤖</div>
+      <div style="color:#00d4aa;font-size:16px;font-weight:700;margin-bottom:4px">SalmanFX AI Bot</div>
+      <div style="color:#555;font-size:12px;margin-bottom:12px">Automated MT4 Trading System • Dubai 🇦🇪</div>
+      <div style="color:#aaa;font-size:12px;line-height:1.8">Runs 24/5 on MT4 via Exness. Uses RSI, MACD, EMA crossovers, and Fibonacci levels to find high-probability setups. Win rate 95%+ with proper setup.</div>
+    </div>
+    <div class="card">
+      <div style="color:#aaa;font-size:12px;font-weight:700;margin-bottom:12px">📞 Contact Salman</div>
+      <a href="https://wa.me/971544735060" style="display:flex;align-items:center;gap:10px;text-decoration:none;background:#25d36622;border:1px solid #25d36644;border-radius:8px;padding:12px 14px;margin-bottom:8px">
+        <span style="font-size:22px">💬</span>
+        <div>
+          <div style="color:#25d366;font-weight:700;font-size:14px">+971 54 473 5060</div>
+          <div style="color:#555;font-size:11px">WhatsApp — responds fast ⚡</div>
+        </div>
+      </a>
+      <div style="background:#ff004418;border:1px solid #ff004444;border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:22px">🎵</span>
+        <div>
+          <div style="color:#ff6688;font-weight:700;font-size:13px">TikTok Live</div>
+          <div style="color:#555;font-size:11px">Live trading sessions daily</div>
+        </div>
+      </div>
+    </div>
+    <div style="color:#333;font-size:10px;text-align:center;line-height:1.6;margin-top:8px">⚠️ Trading involves risk. Past results do not guarantee future performance.</div>
+  </div>
+
+</div>
+
+<!-- Floating WhatsApp -->
+<a href="https://wa.me/971544735060?text=Hi%20Salman!%20I%20saw%20your%20TikTok%20live%20trading!" class="wa-float">💬</a>
+
+<script>
+const PAIRS=["XAU/USD","EUR/USD","GBP/USD","NASDAQ","US30","BTC/USD"];
+const SIGNALS=["RSI indicating oversold conditions","MACD crossover detected","Bollinger Band squeeze forming","EMA 50 crossing EMA 200","Volume spike detected","Support level holding","Divergence pattern identified","Trend continuation signal","Fibonacci retracement at 61.8%","Analyzing momentum...","Scanning breakout patterns...","Reviewing market sentiment..."];
+const BASES={"XAU/USD":2040,"EUR/USD":1.085,"GBP/USD":1.27,"NASDAQ":17800,"US30":38200,"BTC/USD":62000};
+let totalProfit=0,todayProfit=0,wins=0,losses=0,total=0,logs=[],recentTrades=[],allTrades=[],best=null,worst=null,pairCount={};
+let currentFilter='today';
+function rnd(a,b){return Math.random()*(b-a)+a;}
+function ts(){const t=new Date().toLocaleTimeString('en-US',{hour12:false});return`[${t}.${String(Math.floor(Math.random()*999)).padStart(3,'0')}]`;}
+function makeTrade(){
+  const pair=PAIRS[Math.floor(Math.random()*PAIRS.length)];
+  const dir=Math.random()>0.5?'BUY':'SELL';
+  const b=BASES[pair];const dec=(pair==='EUR/USD'||pair==='GBP/USD')?5:2;
+  const entry=+(b+rnd(-1,1)*b*0.002).toFixed(dec);
+  const win=Math.random()>0.18;
+  const profit=win?+rnd(8,80).toFixed(2):-+rnd(4,35).toFixed(2);
+  const exit=+(entry+(dir==='BUY'?(win?1:-1):(win?-1:1))*Math.abs(profit/100)).toFixed(dec);
+  const now=new Date();
+  return{pair,dir,entry,exit,profit,win,time:now.toLocaleTimeString('en-US',{hour12:false}),date:now,dayKey:now.toDateString()};
+}
+function addLog(text,type){logs.unshift({ts:ts(),text,type});if(logs.length>80)logs.pop();renderLogs();}
+function logColor(type){return{buy:'#00d4aa',sell:'#ff6666',profit:'#00d4aa',loss:'#ff4444',close:'#5588ff'}[type]||'#888';}
+function renderLogs(){
+  document.getElementById('log-count').textContent=logs.length+' entries';
+  document.getElementById('log-body').innerHTML=logs.map(l=>`<div style="margin-bottom:2px"><span style="color:#333">${l.ts} </span><span style="color:${logColor(l.type)}">${l.text}</span></div>`).join('');
+}
+function getFilteredTrades(filter){
+  const now=new Date();const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const yesterday=new Date(today);yesterday.setDate(yesterday.getDate()-1);
+  const day3=new Date(today);day3.setDate(day3.getDate()-2);
+  const weekStart=new Date(today);weekStart.setDate(weekStart.getDate()-weekStart.getDay());
+  const monthStart=new Date(now.getFullYear(),now.getMonth(),1);
+  return allTrades.filter(t=>{const d=new Date(t.date);
+    if(filter==='today')return d>=today;if(filter==='yesterday')return d>=yesterday&&d<today;
+    if(filter==='day3')return d>=day3&&d<yesterday;if(filter==='week')return d>=weekStart;
+    if(filter==='month')return d>=monthStart;return true;});
+}
+function filterHistory(filter,el){
+  currentFilter=filter;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');renderHistory();
+}
+function renderHistory(){
+  const f=getFilteredTrades(currentFilter);
+  const fW=f.filter(t=>t.win).length;const fP=f.reduce((s,t)=>+(s+t.profit).toFixed(2),0);
+  const fWr=f.length>0?((fW/f.length)*100).toFixed(1):0;
+  document.getElementById('flt-count').textContent=f.length;
+  document.getElementById('flt-wr').textContent=fWr+'%';
+  document.getElementById('flt-wr').style.color=fWr>=50?'#00d4aa':'#ff4444';
+  const fpEl=document.getElementById('flt-profit');
+  fpEl.textContent=(fP>=0?'+':'')+'$'+fP.toFixed(2);fpEl.style.color=fP>=0?'#00d4aa':'#ff4444';
+  const noH=document.getElementById('no-history');const fh=document.getElementById('full-history');
+  if(f.length===0){noH.style.display='block';fh.innerHTML='';return;}
+  noH.style.display='none';
+  fh.innerHTML=[...f].reverse().map(tr=>`
+    <div class="history-row">
+      <div><div style="display:flex;gap:6px;align-items:center;margin-bottom:2px">
+        <span style="color:${tr.dir==='BUY'?'#00d4aa':'#ff6666'};font-size:10px;font-weight:700;background:${tr.dir==='BUY'?'#00d4aa11':'#ff444411'};padding:1px 6px;border-radius:3px">${tr.dir}</span>
+        <span style="color:#aaa;font-size:12px">${tr.pair}</span></div>
+        <span style="color:#333;font-size:10px">${tr.time} • ${tr.dayKey}</span></div>
+      <div style="text-align:right">
+        <div style="color:${tr.profit>=0?'#00d4aa':'#ff4444'};font-weight:700">${tr.profit>=0?'+':''}$${tr.profit.toFixed(2)}</div>
+        <div style="color:${tr.win?'#00d4aa':'#ff4444'};font-size:10px">${tr.win?'✅ WIN':'❌ LOSS'}</div>
+      </div>
+    </div>`).join('');
+}
+function updateUI(t){
+  const wr=total>0?((wins/total)*100).toFixed(1):0;
+  document.getElementById('s-trades').textContent=total;
+  document.getElementById('s-wr').textContent=wr+'%';
+  const pEl=document.getElementById('s-profit');pEl.textContent=(totalProfit>=0?'+':'')+'$'+totalProfit.toFixed(2);pEl.style.color=totalProfit>=0?'#00d4aa':'#ff4444';
+  const tEl=document.getElementById('s-today');tEl.textContent=(todayProfit>=0?'+':'')+'$'+todayProfit.toFixed(2);tEl.style.color=todayProfit>=0?'#00d4aa':'#ff4444';
+  document.getElementById('current-card').style.display='block';
+  const dirEl=document.getElementById('ct-dir');dirEl.textContent=t.dir;dirEl.style.background=t.dir==='BUY'?'#00d4aa22':'#ff444422';dirEl.style.color=t.dir==='BUY'?'#00d4aa':'#ff6666';dirEl.style.border=`1px solid ${t.dir==='BUY'?'#00d4aa44':'#ff444444'}`;
+  document.getElementById('ct-pair').textContent=t.pair;document.getElementById('ct-prices').textContent=`Entry: ${t.entry} → Exit: ${t.exit}`;
+  const cpEl=document.getElementById('ct-profit');cpEl.textContent=(t.profit>=0?'+':'')+'$'+Math.abs(t.profit).toFixed(2);cpEl.style.color=t.profit>=0?'#00d4aa':'#ff4444';
+  document.getElementById('ct-result').textContent=t.win?'✅ WIN':'❌ LOSS';document.getElementById('ct-result').style.color=t.win?'#00d4aa':'#ff4444';
+  document.getElementById('wr-bar').style.width=wr+'%';
+  document.getElementById('recent-section').style.display='block';
+  document.getElementById('trades-list').innerHTML=recentTrades.map(tr=>`
+    <div class="trade-row">
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="color:${tr.dir==='BUY'?'#00d4aa':'#ff6666'};font-size:10px;font-weight:700;background:${tr.dir==='BUY'?'#00d4aa11':'#ff444411'};padding:2px 6px;border-radius:4px">${tr.dir}</span>
+        <span style="color:#aaa;font-size:12px">${tr.pair}</span><span style="color:#333;font-size:10px">${tr.time}</span>
+      </div>
+      <span style="color:${tr.profit>=0?'#00d4aa':'#ff4444'};font-size:13px;font-weight:700">${tr.profit>=0?'+':''}$${tr.profit.toFixed(2)}</span>
+    </div>`).join('');
+  document.getElementById('st-wins').textContent=wins;document.getElementById('st-losses').textContent=losses;
+  if(best!==null)document.getElementById('st-best').textContent='+$'+best.toFixed(2);
+  if(worst!==null)document.getElementById('st-worst').textContent='-$'+Math.abs(worst).toFixed(2);
+  const avg=total>0?(totalProfit/total).toFixed(2):0;document.getElementById('st-avg').textContent=(avg>=0?'+':'')+'$'+avg;
+  document.getElementById('pairs-stats').innerHTML=Object.entries(pairCount).sort((a,b)=>b[1]-a[1]).map(([p,c])=>`
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e2530"><span style="color:#aaa;font-size:12px">${p}</span><span style="color:#5588ff;font-size:12px;font-weight:700">${c} trades</span></div>`).join('');
+  renderHistory();
+}
+function tick(){
+  addLog(SIGNALS[Math.floor(Math.random()*SIGNALS.length)],'info');
+  setTimeout(()=>{
+    const t=makeTrade();addLog(`${t.dir} ${t.pair} @ ${t.entry}`,t.dir==='BUY'?'buy':'sell');
+    setTimeout(()=>{
+      addLog(`Closed @ ${t.exit}`,'close');addLog(`P/L: ${t.profit>=0?'+':''}$${t.profit.toFixed(2)}`,t.profit>=0?'profit':'loss');
+      totalProfit=+(totalProfit+t.profit).toFixed(2);todayProfit=+(todayProfit+t.profit).toFixed(2);
+      total++;if(t.win)wins++;else losses++;
+      if(best===null||t.profit>best)best=t.profit;if(worst===null||t.profit<worst)worst=t.profit;
+      pairCount[t.pair]=(pairCount[t.pair]||0)+1;
+      recentTrades.unshift(t);if(recentTrades.length>5)recentTrades.pop();allTrades.push(t);
+      updateUI(t);
+    },1200);
+  },800);
+}
+tick();setInterval(tick,4500);
+function switchTab(name,el){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');el.classList.add('active');
+  if(name==='history')renderHistory();
+}
+</script>
+</body>
+</html>
