@@ -183,9 +183,8 @@ body{background:#0a0c10;color:#fff;font-family:'Courier New',monospace;padding-b
   <!-- ════ HISTORY TAB ════ -->
   <div id="tab-history" class="tab-content">
     <div style="display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;padding-bottom:2px">
-      <div class="fbtn active" onclick="setDF('today',this)">📅 Today</div>
-      <div class="fbtn" onclick="setDF('yesterday',this)">◀ Yesterday</div>
-      <div class="fbtn" onclick="setDF('day3',this)">◀◀ 2 Days</div>
+      <div class="fbtn active" onclick="setDF('24h',this)">⏱ Last 24h</div>
+      <div class="fbtn" onclick="setDF('48h',this)">🕐 Last 48h</div>
       <div class="fbtn" onclick="setDF('week',this)">📆 This Week</div>
       <div class="fbtn" onclick="setDF('month',this)">🗓 This Month</div>
       <div class="fbtn" onclick="setDF('all',this)">📋 All Time</div>
@@ -343,7 +342,7 @@ const accs = {
   mt4: { id:'mt4', label:'MT4', trades:[], openTrades:[], totalProfit:0, wins:0, losses:0, winRate:0, balance:0, equity:0, online:false },
   mt5: { id:'mt5', label:'MT5', trades:[], openTrades:[], totalProfit:0, wins:0, losses:0, winRate:0, balance:0, equity:0, online:false }
 };
-let logs=[], dateFilter='today', accFilter='all';
+let logs=[], dateFilter='24h', accFilter='all';
 let goldPrice=null, goldPrev=null, goldHigh=null, goldLow=null;
 let ws, reconnectTimer;
 
@@ -588,20 +587,19 @@ function getAllTrades(){
 }
 
 function getFiltered(){
-  const n=new Date(), today=new Date(n.getFullYear(),n.getMonth(),n.getDate());
-  const yest=new Date(today); yest.setDate(yest.getDate()-1);
-  const day3=new Date(today); day3.setDate(day3.getDate()-2);
-  const wk=new Date(today); wk.setDate(wk.getDate()-wk.getDay());
-  const mo=new Date(n.getFullYear(),n.getMonth(),1);
+  const now = new Date();
+  const h24  = new Date(now.getTime() - 24*60*60*1000);
+  const h48  = new Date(now.getTime() - 48*60*60*1000);
+  const h7d  = new Date(now.getTime() -  7*24*60*60*1000);
+  const h30d = new Date(now.getTime() - 30*24*60*60*1000);
   return getAllTrades().filter(t=>{
     const d=new Date(t.date||Date.now());
     let ok=false;
-    if(dateFilter==='today')     ok=d>=today;
-    else if(dateFilter==='yesterday') ok=d>=yest&&d<today;
-    else if(dateFilter==='day3') ok=d>=day3&&d<yest;
-    else if(dateFilter==='week') ok=d>=wk;
-    else if(dateFilter==='month')ok=d>=mo;
-    else ok=true;
+    if(dateFilter==='24h')   ok=d>=h24;
+    else if(dateFilter==='48h')  ok=d>=h48;
+    else if(dateFilter==='week') ok=d>=h7d;
+    else if(dateFilter==='month')ok=d>=h30d;
+    else ok=true; // All Time
     return ok && (accFilter==='all'||t.acc===accFilter);
   });
 }
