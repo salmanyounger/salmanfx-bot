@@ -1,716 +1,219 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SalmanFX Bot</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a0c10;color:#fff;font-family:'Courier New',monospace;padding-bottom:80px}
-.header{background:#111318;border-bottom:2px solid #00d4aa33;padding:12px 16px;position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between}
-.tab-bar{display:flex;gap:5px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px}
-.tab{background:#161b24;border:1px solid #2a3040;border-radius:8px;padding:8px 12px;font-size:10px;color:#888;cursor:pointer;white-space:nowrap;font-family:'Courier New',monospace;font-weight:700;flex-shrink:0;transition:all 0.15s}
-.tab.active{background:#00d4aa22;color:#00d4aa;border-color:#00d4aa66}
-.tab-content{display:none}.tab-content.active{display:block}
-.card{background:#161b24;border:1px solid #2a3040;border-radius:12px;padding:14px 16px;margin-bottom:12px}
-.hrow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #1e2530}
-.hrow:last-child{border:none}
-.acc-box{border-radius:14px;padding:14px 16px;margin-bottom:12px}
-.mini-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
-.mini-cell{background:#ffffff08;border-radius:8px;padding:8px 4px;text-align:center}
-.fbtn{background:#0d1117;border:1px solid #2a3040;border-radius:20px;padding:5px 12px;font-size:10px;color:#888;cursor:pointer;white-space:nowrap;font-family:'Courier New',monospace;font-weight:700;flex-shrink:0;transition:all 0.15s}
-.fbtn.active{background:#5588ff22;color:#5588ff;border-color:#5588ff55}
-.afbtn{border-radius:20px;padding:4px 12px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Courier New',monospace;flex-shrink:0;border:1px solid transparent;transition:all 0.15s}
-.wa-float{position:fixed;bottom:20px;right:16px;background:#25d366;border-radius:50%;width:56px;height:56px;display:flex;align-items:center;justify-content:center;font-size:28px;text-decoration:none;z-index:998;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{box-shadow:0 4px 24px #25d36666}50%{box-shadow:0 4px 32px #25d366cc}}
-@keyframes slideIn{from{transform:translateY(-8px);opacity:0}to{transform:translateY(0);opacity:1}}
-.new-trade{animation:slideIn 0.35s ease}
-.flist{list-style:none}
-.flist li{font-size:11px;color:#ccc;padding:3px 0}
-.flist li::before{content:'✅ '}
-.flist li.warn::before{content:'⚠️ '}
-.flist li.cross::before{content:'❌ '}
-.wa-btn{display:block;background:#25d366;color:#000;border:none;border-radius:8px;padding:10px;text-align:center;font-weight:700;font-size:12px;text-decoration:none;margin-top:12px;font-family:'Courier New',monospace}
-/* Popup */
-.popup-overlay{position:fixed;inset:0;background:#000000cc;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
-.popup-box{background:#161b24;border:1px solid #00d4aa44;border-radius:16px;padding:24px 20px;width:100%;max-width:320px;text-align:center}
-.popup-input{width:100%;background:#0d1117;border:1px solid #2a3040;border-radius:8px;padding:11px 14px;color:#fff;font-size:14px;font-family:'Courier New',monospace;outline:none;margin-bottom:10px}
-.popup-input:focus{border-color:#00d4aa55}
-.toast{position:fixed;top:80px;right:16px;background:#161b24;border:1px solid #00d4aa44;border-radius:10px;padding:10px 14px;font-size:12px;z-index:999;display:none;max-width:260px}
-</style>
-</head>
-<body>
+// ============================================================
+//  SalmanFX Bot Server — server.js v3
+//  Fixes: Real MT4 dates, Yahoo Finance gold price
+//  Run: node server.js
+// ============================================================
+const http      = require("http");
+const https     = require("https");
+const WebSocket = require("ws");
+const PORT      = 3008;
 
-<!-- ═══ POPUP ═══ -->
-<div class="popup-overlay" id="wa-popup" style="display:none">
-  <div class="popup-box">
-    <div style="font-size:36px;margin-bottom:10px">💬</div>
-    <div style="color:#00d4aa;font-size:16px;font-weight:700;margin-bottom:6px">Join SalmanFX Signals</div>
-    <div style="color:#888;font-size:12px;margin-bottom:20px;line-height:1.7">Enter your WhatsApp to get free trading signals from Salman's live bot!</div>
-    <input class="popup-input" id="popup-name" type="text" placeholder="Your name" maxlength="40"/>
-    <div style="display:flex;gap:8px;margin-bottom:10px">
-      <select id="popup-cc" style="background:#0d1117;border:1px solid #2a3040;border-radius:8px;padding:11px 8px;color:#fff;font-size:11px;font-family:'Courier New',monospace;outline:none;flex-shrink:0;width:105px">
-        <option value="971">🇦🇪 +971</option>
-        <option value="966">🇸🇦 +966</option>
-        <option value="965">🇰🇼 +965</option>
-        <option value="974">🇶🇦 +974</option>
-        <option value="973">🇧🇭 +973</option>
-        <option value="968">🇴🇲 +968</option>
-        <option value="91">🇮🇳 +91</option>
-        <option value="92">🇵🇰 +92</option>
-        <option value="880">🇧🇩 +880</option>
-        <option value="20">🇪🇬 +20</option>
-        <option value="44">🇬🇧 +44</option>
-        <option value="1">🇺🇸 +1</option>
-        <option value="49">🇩🇪 +49</option>
-        <option value="33">🇫🇷 +33</option>
-        <option value="7">🇷🇺 +7</option>
-        <option value="86">🇨🇳 +86</option>
-        <option value="62">🇮🇩 +62</option>
-        <option value="60">🇲🇾 +60</option>
-        <option value="63">🇵🇭 +63</option>
-        <option value="234">🇳🇬 +234</option>
-        <option value="27">🇿🇦 +27</option>
-        <option value="55">🇧🇷 +55</option>
-        <option value="90">🇹🇷 +90</option>
-        <option value="98">🇮🇷 +98</option>
-        <option value="964">🇮🇶 +964</option>
-        <option value="962">🇯🇴 +962</option>
-        <option value="961">🇱🇧 +961</option>
-      </select>
-      <input class="popup-input" id="popup-wa" type="tel" placeholder="54 123 4567" style="margin:0;flex:1"/>
-    </div>
-    <button onclick="submitPopup()" style="width:100%;background:linear-gradient(135deg,#25d366,#128c7e);color:#000;border:none;border-radius:8px;padding:12px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Courier New',monospace;margin-bottom:8px">💬 Get Free Signals</button>
-    <div onclick="skipPopup()" style="color:#555;font-size:11px;cursor:pointer;text-decoration:underline">Skip for now</div>
-  </div>
-</div>
+const accounts = {};
+const contacts  = [];
+let   goldPrice = null;
+let   goldPrev  = null;
 
-<div class="toast" id="toast"></div>
-
-<!-- ═══ HEADER ═══ -->
-<div class="header">
-  <div style="display:flex;align-items:center;gap:10px">
-    <span style="font-size:22px">🤖</span>
-    <div>
-      <div style="color:#00d4aa;font-weight:700;font-size:16px;letter-spacing:2px">SALMANFX</div>
-      <div style="color:#888;font-size:9px;letter-spacing:2px">MT4 + MT5 LIVE</div>
-    </div>
-  </div>
-  <span id="conn-badge" style="background:#ff444422;color:#ff6666;border:1px solid #ff444444;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700">⬤ OFFLINE</span>
-</div>
-
-<div style="padding:16px">
-
-  <!-- GOLD -->
-  <div style="background:linear-gradient(135deg,#1a1200,#0d0a00);border:1px solid #ffaa0033;border-radius:10px;padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
-    <div>
-      <div style="color:#888;font-size:10px;letter-spacing:1px">🪙 XAU/USD LIVE</div>
-      <div id="gold-val" style="color:#ffdd44;font-size:24px;font-weight:700">Loading...</div>
-    </div>
-    <div style="text-align:right">
-      <div id="gold-chg" style="color:#00d4aa;font-size:13px;font-weight:700">⬤ LIVE</div>
-      <div id="gold-time" style="color:#555;font-size:10px">—</div>
-    </div>
-  </div>
-
-  <!-- WA BANNER -->
-  <a href="https://wa.me/971544735060?text=Hi%20Salman!%20I%20saw%20your%20trading%20bot!" style="display:flex;align-items:center;background:#25d366;border-radius:12px;margin-bottom:14px;overflow:hidden;text-decoration:none">
-    <div style="background:#128c7e;padding:14px 16px;font-size:26px">💬</div>
-    <div style="flex:1;padding:10px 14px"><div style="color:#fff;font-weight:700;font-size:15px">+971 54 473 5060</div><div style="color:#d4f5e0;font-size:11px">Tap to WhatsApp Salman ⚡</div></div>
-    <div style="padding:14px 16px;color:#fff;font-size:20px">→</div>
-  </a>
-
-  <!-- COMBINED TOTAL -->
-  <div style="background:linear-gradient(135deg,#0d1a2e,#0d2a1e);border:1px solid #ffffff11;border-radius:14px;padding:14px 16px;margin-bottom:14px">
-    <div style="color:#888;font-size:10px;letter-spacing:2px;margin-bottom:10px">📊 COMBINED — ALL ACCOUNTS</div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
-      <div style="text-align:center"><div style="color:#888;font-size:9px">Trades</div><div id="tot-t" style="color:#fff;font-size:20px;font-weight:700">—</div></div>
-      <div style="text-align:center"><div style="color:#888;font-size:9px">Win Rate</div><div id="tot-wr" style="color:#00d4aa;font-size:20px;font-weight:700">—</div></div>
-      <div style="text-align:center"><div style="color:#888;font-size:9px">Profit</div><div id="tot-p" style="color:#00d4aa;font-size:18px;font-weight:700">—</div></div>
-      <div style="text-align:center"><div style="color:#888;font-size:9px">Balance</div><div id="tot-b" style="color:#fff;font-size:16px;font-weight:700">—</div></div>
-    </div>
-  </div>
-
-  <!-- TABS -->
-  <div class="tab-bar">
-    <div class="tab active" onclick="switchTab('live',this)">⚡ Live</div>
-    <div class="tab" onclick="switchTab('history',this)">📋 History</div>
-    <div class="tab" onclick="switchTab('stats',this)">📊 Stats</div>
-    <div class="tab" onclick="switchTab('tiktok',this)">🔴 TikTok</div>
-    <div class="tab" onclick="switchTab('partner',this)">🤝 Partner</div>
-    <div class="tab" onclick="switchTab('about',this)">ℹ️ About</div>
-  </div>
-
-  <!-- ════ LIVE ════ -->
-  <div id="tab-live" class="tab-content active">
-
-    <!-- MT4 SECTION -->
-    <div class="acc-box" style="background:#0d1a0d;border:1px solid #00d4aa33">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div id="mt4-dot" style="width:9px;height:9px;border-radius:50%;background:#555"></div>
-          <span style="color:#fff;font-size:14px;font-weight:700">MT4 Account</span>
-          <span style="background:#00d4aa22;color:#00d4aa;border:1px solid #00d4aa33;border-radius:4px;padding:2px 7px;font-size:9px;font-weight:700">MT4</span>
-        </div>
-        <span id="mt4-badge" style="background:#55555522;color:#555;border:1px solid #55555544;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700">⬤ OFFLINE</span>
-      </div>
-      <div class="mini-grid">
-        <div class="mini-cell"><div style="color:#888;font-size:9px">Trades</div><div id="mt4-t" style="color:#fff;font-size:18px;font-weight:700">—</div></div>
-        <div class="mini-cell"><div style="color:#888;font-size:9px">Win</div><div id="mt4-wr" style="color:#00d4aa;font-size:18px;font-weight:700">—</div></div>
-        <div class="mini-cell"><div style="color:#888;font-size:9px">Profit</div><div id="mt4-p" style="color:#00d4aa;font-size:14px;font-weight:700">—</div></div>
-        <div class="mini-cell"><div style="color:#888;font-size:9px">Balance</div><div id="mt4-b" style="color:#fff;font-size:13px;font-weight:700">—</div></div>
-      </div>
-      <div id="mt4-open" style="display:none;margin-bottom:8px"></div>
-      <div id="mt4-latest"></div>
-    </div>
-
-    <!-- MT5 SECTION -->
-    <div class="acc-box" style="background:#0d0d1a;border:1px solid #5588ff33">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div id="mt5-dot" style="width:9px;height:9px;border-radius:50%;background:#555"></div>
-          <span style="color:#fff;font-size:14px;font-weight:700">MT5 Account</span>
-          <span style="background:#5588ff22;color:#5588ff;border:1px solid #5588ff33;border-radius:4px;padding:2px 7px;font-size:9px;font-weight:700">MT5</span>
-        </div>
-        <span id="mt5-badge" style="background:#55555522;color:#555;border:1px solid #55555544;border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700">⬤ OFFLINE</span>
-      </div>
-      <div class="mini-grid">
-        <div class="mini-cell"><div style="color:#888;font-size:9px">Trades</div><div id="mt5-t" style="color:#fff;font-size:18px;font-weight:700">—</div></div>
-        <div class="mini-cell"><div style="color:#888;font-size:9px">Win</div><div id="mt5-wr" style="color:#00d4aa;font-size:18px;font-weight:700">—</div></div>
-        <div class="mini-cell"><div style="color:#888;font-size:9px">Profit</div><div id="mt5-p" style="color:#00d4aa;font-size:14px;font-weight:700">—</div></div>
-        <div class="mini-cell"><div style="color:#888;font-size:9px">Balance</div><div id="mt5-b" style="color:#fff;font-size:13px;font-weight:700">—</div></div>
-      </div>
-      <div id="mt5-open" style="display:none;margin-bottom:8px"></div>
-      <div id="mt5-latest"></div>
-    </div>
-
-    <!-- LIVE FEED -->
-    <div style="background:#0d1117;border:1px solid #2a3040;border-radius:12px;overflow:hidden">
-      <div style="padding:10px 14px;border-bottom:1px solid #1e2530;display:flex;justify-content:space-between">
-        <span style="color:#fff;font-size:12px;font-weight:700">🖥 Live Feed</span>
-        <span id="log-cnt" style="color:#888;font-size:11px">0 events</span>
-      </div>
-      <div id="log-body" style="padding:10px 14px;max-height:150px;overflow-y:auto;font-size:11px;line-height:1.9">
-        <div style="color:#555;font-style:italic">Connecting to server...</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ════ HISTORY ════ -->
-  <div id="tab-history" class="tab-content">
-
-    <!-- Date filters -->
-    <div style="display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;padding-bottom:2px">
-      <div class="fbtn active" onclick="setDF('today',this)">📅 Today</div>
-      <div class="fbtn" onclick="setDF('yesterday',this)">◀ Yesterday</div>
-      <div class="fbtn" onclick="setDF('day3',this)">◀◀ 2 Days</div>
-      <div class="fbtn" onclick="setDF('week',this)">📆 This Week</div>
-      <div class="fbtn" onclick="setDF('month',this)">🗓 This Month</div>
-      <div class="fbtn" onclick="setDF('all',this)">📋 All Time</div>
-    </div>
-
-    <!-- Account filters -->
-    <div style="display:flex;gap:6px;margin-bottom:12px">
-      <div class="afbtn active" id="af-all" onclick="setAF('all',this)" style="background:#ffffff11;color:#fff;border-color:#ffffff22">All</div>
-      <div class="afbtn" id="af-mt4" onclick="setAF('mt4',this)" style="background:#00d4aa11;color:#00d4aa;border-color:#00d4aa33">MT4</div>
-      <div class="afbtn" id="af-mt5" onclick="setAF('mt5',this)" style="background:#5588ff11;color:#5588ff;border-color:#5588ff33">MT5</div>
-    </div>
-
-    <!-- Summary -->
-    <div style="background:#161b24;border:1px solid #2a3040;border-radius:10px;padding:10px 16px;margin-bottom:12px;display:flex;gap:16px;flex-wrap:wrap">
-      <div><div style="color:#888;font-size:10px">Trades</div><div id="h-cnt" style="color:#fff;font-weight:700;font-size:20px">0</div></div>
-      <div><div style="color:#888;font-size:10px">Win Rate</div><div id="h-wr" style="color:#00d4aa;font-weight:700;font-size:20px">0%</div></div>
-      <div><div style="color:#888;font-size:10px">Profit</div><div id="h-profit" style="color:#00d4aa;font-weight:700;font-size:20px">$0</div></div>
-      <div><div style="color:#888;font-size:10px">Wins</div><div id="h-wins" style="color:#00d4aa;font-weight:700;font-size:20px">0</div></div>
-    </div>
-
-    <div class="card" style="padding:0;overflow:hidden">
-      <div id="h-list" style="padding:0 16px"></div>
-      <div id="h-empty" style="color:#555;font-size:12px;text-align:center;padding:28px">No trades in this period</div>
-    </div>
-  </div>
-
-  <!-- ════ STATS ════ -->
-  <div id="tab-stats" class="tab-content">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-      <div style="background:#0d1a0d;border:1px solid #00d4aa33;border-radius:12px;padding:14px;text-align:center">
-        <div style="color:#00d4aa;font-size:10px;font-weight:700;margin-bottom:10px">MT4 ACCOUNT</div>
-        <div id="st-mt4-wr" style="color:#fff;font-size:28px;font-weight:700">—</div>
-        <div style="color:#888;font-size:10px;margin-bottom:8px">win rate</div>
-        <div id="st-mt4-p" style="color:#00d4aa;font-size:16px;font-weight:700">—</div>
-        <div style="color:#888;font-size:10px;margin-bottom:8px">profit</div>
-        <div id="st-mt4-t" style="color:#fff;font-size:13px;font-weight:700">— trades</div>
-        <div id="st-mt4-best" style="color:#888;font-size:10px">best: —</div>
-      </div>
-      <div style="background:#0d0d1a;border:1px solid #5588ff33;border-radius:12px;padding:14px;text-align:center">
-        <div style="color:#5588ff;font-size:10px;font-weight:700;margin-bottom:10px">MT5 ACCOUNT</div>
-        <div id="st-mt5-wr" style="color:#fff;font-size:28px;font-weight:700">—</div>
-        <div style="color:#888;font-size:10px;margin-bottom:8px">win rate</div>
-        <div id="st-mt5-p" style="color:#00d4aa;font-size:16px;font-weight:700">—</div>
-        <div style="color:#888;font-size:10px;margin-bottom:8px">profit</div>
-        <div id="st-mt5-t" style="color:#fff;font-size:13px;font-weight:700">— trades</div>
-        <div id="st-mt5-best" style="color:#888;font-size:10px">best: —</div>
-      </div>
-    </div>
-    <div class="card">
-      <div style="color:#fff;font-size:12px;font-weight:700;margin-bottom:12px">🎯 Pairs Traded</div>
-      <div id="pairs-list"><div style="color:#555;font-size:12px">No data yet</div></div>
-    </div>
-  </div>
-
-  <!-- ════ TIKTOK ════ -->
-  <div id="tab-tiktok" class="tab-content">
-    <div style="background:#0a0c10;border:2px solid #00d4aa33;border-radius:16px;padding:20px;text-align:center;margin-bottom:12px">
-      <div style="color:#888;font-size:10px;letter-spacing:2px;margin-bottom:4px">🪙 LIVE GOLD</div>
-      <div id="tk-gold" style="color:#ffdd44;font-size:44px;font-weight:700;margin-bottom:16px">—</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-        <div style="background:#0d1a0d;border:1px solid #00d4aa33;border-radius:10px;padding:12px">
-          <div style="color:#888;font-size:9px">MT4 Win Rate</div>
-          <div id="tk-mt4-wr" style="color:#00d4aa;font-size:28px;font-weight:700">—</div>
-          <div id="tk-mt4-p" style="color:#00d4aa;font-size:11px">— profit</div>
-        </div>
-        <div style="background:#0d0d1a;border:1px solid #5588ff33;border-radius:10px;padding:12px">
-          <div style="color:#888;font-size:9px">MT5 Win Rate</div>
-          <div id="tk-mt5-wr" style="color:#5588ff;font-size:28px;font-weight:700">—</div>
-          <div id="tk-mt5-p" style="color:#5588ff;font-size:11px">— profit</div>
-        </div>
-      </div>
-      <div id="tk-box" style="background:#0d2a1e;border:2px solid #00d4aa44;border-radius:12px;padding:16px;margin-bottom:12px">
-        <div id="tk-acc" style="color:#888;font-size:10px;letter-spacing:1px;margin-bottom:4px">—</div>
-        <div id="tk-result" style="color:#888;font-size:26px;font-weight:700;margin-bottom:4px">Waiting for trades...</div>
-        <div id="tk-amount" style="color:#888;font-size:38px;font-weight:700;margin-bottom:4px">—</div>
-        <div id="tk-sym" style="color:#888;font-size:13px">—</div>
-      </div>
-      <div style="color:#555;font-size:10px">🤖 bot.dubairovers.com</div>
-    </div>
-    <button onclick="goFS()" style="width:100%;background:linear-gradient(135deg,#ff0044,#ff6600);color:#fff;border:none;border-radius:10px;padding:13px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Courier New',monospace;letter-spacing:1px">🔴 FULLSCREEN — TikTok Live</button>
-  </div>
-
-  <!-- ════ PRICING ════ -->
-
-  <!-- ════ PARTNER ════ -->
-  <div id="tab-partner" class="tab-content">
-    <div style="background:linear-gradient(135deg,#1a1a0d,#0d1a00);border:1px solid #ffaa0044;border-radius:14px;padding:16px;margin-bottom:12px">
-      <div style="font-size:28px;margin-bottom:8px">🤝</div>
-      <div style="color:#ffaa00;font-size:16px;font-weight:700;margin-bottom:4px">Account Management</div>
-      <div style="color:#888;font-size:11px;margin-bottom:14px">Let Salman's bot trade your account</div>
-      <div style="background:#ffaa0011;border:1px solid #ffaa0033;border-radius:10px;padding:12px;margin-bottom:14px;text-align:center">
-        <div style="display:flex;align-items:center;justify-content:center;gap:16px">
-          <div><div style="color:#00d4aa;font-size:34px;font-weight:700">50%</div><div style="color:#888;font-size:11px">You Keep</div></div>
-          <div style="color:#333;font-size:26px">|</div>
-          <div><div style="color:#ffaa00;font-size:34px;font-weight:700">50%</div><div style="color:#888;font-size:11px">Salman Fee</div></div>
-        </div>
-      </div>
-      <div style="background:#00d4aa11;border:1px solid #00d4aa33;border-radius:8px;padding:10px;margin-bottom:14px">
-        <div style="color:#00d4aa;font-size:11px;font-weight:700;margin-bottom:4px">💡 Example</div>
-        <div style="color:#ccc;font-size:11px;line-height:1.8">$5,000 deposit → $1,000 profit<br><span style="color:#00d4aa">You: $500</span> | <span style="color:#ffaa00">Salman: $500</span></div>
-      </div>
-      <a href="https://wa.me/971544735060?text=Partnership%2050%25%20profit" class="wa-btn">💬 Start Partnership</a>
-    </div>
-    <div style="color:#555;font-size:10px;text-align:center">⚠️ No profit = no fee. Trading involves risk.</div>
-  </div>
-
-  <!-- ════ ABOUT ════ -->
-  <div id="tab-about" class="tab-content">
-    <div class="card" style="margin-bottom:10px">
-      <div style="font-size:28px;margin-bottom:8px">🤖</div>
-      <div style="color:#00d4aa;font-size:15px;font-weight:700;margin-bottom:4px">SalmanFX AI Bot</div>
-      <div style="color:#888;font-size:11px;margin-bottom:10px">Automated MT4 + MT5 • Dubai 🇦🇪</div>
-      <div style="color:#ccc;font-size:12px;line-height:1.8">Runs 24/5 via Exness. Parabolic SAR + AI indicators. Win rate 95%+ with proper setup.</div>
-    </div>
-    <div class="card">
-      <a href="https://wa.me/971544735060" style="display:flex;align-items:center;gap:10px;text-decoration:none;background:#25d36622;border:1px solid #25d36644;border-radius:8px;padding:12px 14px">
-        <span style="font-size:22px">💬</span>
-        <div><div style="color:#25d366;font-weight:700;font-size:14px">+971 54 473 5060</div><div style="color:#888;font-size:11px">WhatsApp — fast ⚡</div></div>
-      </a>
-    </div>
-    <div style="color:#555;font-size:10px;text-align:center;margin-top:8px">⚠️ Trading involves risk.</div>
-  </div>
-
-</div>
-
-<a href="https://wa.me/971544735060" class="wa-float">💬</a>
-
-<!-- FULLSCREEN -->
-<div id="fs" style="display:none;position:fixed;inset:0;background:#0a0c10;z-index:9999;padding:24px 20px;text-align:center">
-  <button onclick="document.getElementById('fs').style.display='none'" style="position:absolute;top:16px;right:16px;background:#222;color:#fff;border:none;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:12px;font-family:'Courier New',monospace">✕ Exit</button>
-  <div style="margin-top:16px;color:#555;font-size:10px;letter-spacing:3px;margin-bottom:6px">SALMANFX AI BOT</div>
-  <div id="fs-gold" style="color:#ffdd44;font-size:52px;font-weight:700;margin-bottom:20px">—</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
-    <div style="background:#0d1a0d;border:1px solid #00d4aa33;border-radius:12px;padding:14px">
-      <div style="color:#888;font-size:10px">MT4 Win Rate</div>
-      <div id="fs-mt4-wr" style="color:#00d4aa;font-size:34px;font-weight:700">—</div>
-      <div id="fs-mt4-p" style="color:#00d4aa;font-size:12px">—</div>
-    </div>
-    <div style="background:#0d0d1a;border:1px solid #5588ff33;border-radius:12px;padding:14px">
-      <div style="color:#888;font-size:10px">MT5 Win Rate</div>
-      <div id="fs-mt5-wr" style="color:#5588ff;font-size:34px;font-weight:700">—</div>
-      <div id="fs-mt5-p" style="color:#5588ff;font-size:12px">—</div>
-    </div>
-  </div>
-  <div id="fs-box" style="background:#0d2a1e;border:3px solid #00d4aa44;border-radius:16px;padding:22px;margin-bottom:16px">
-    <div id="fs-acc" style="color:#888;font-size:11px;letter-spacing:1px;margin-bottom:4px">—</div>
-    <div id="fs-result" style="color:#888;font-size:28px;font-weight:700;margin-bottom:4px">Waiting...</div>
-    <div id="fs-amount" style="color:#888;font-size:48px;font-weight:700;margin-bottom:4px">—</div>
-    <div id="fs-sym" style="color:#888;font-size:14px">—</div>
-  </div>
-  <div style="color:#888;font-size:11px">bot.dubairovers.com | +971 54 473 5060</div>
-</div>
-
-<script>
-// ── CONFIG ────────────────────────────────────────────────
-const WS_URL      = "wss://unparcelled-flory-amelie.ngrok-free.dev";
-const SERVER_HTTP = "https://unparcelled-flory-amelie.ngrok-free.dev";
-
-// ── STATE ─────────────────────────────────────────────────
-const accs = {
-  mt4: { id:'mt4', label:'MT4', trades:[], openTrades:[], totalProfit:0, wins:0, losses:0, winRate:0, balance:0, online:false },
-  mt5: { id:'mt5', label:'MT5', trades:[], openTrades:[], totalProfit:0, wins:0, losses:0, winRate:0, balance:0, online:false }
-};
-let logs=[], dateFilter='today', accFilter='all';
-let goldPrice=null, goldPrev=null, ws, reconnectTimer;
-
-// ── POPUP ─────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded',()=>{
-  if(!localStorage.getItem('sfx_done'))
-    setTimeout(()=>document.getElementById('wa-popup').style.display='flex',2000);
-});
-function submitPopup(){
-  const name=document.getElementById('popup-name').value.trim();
-  const wa=document.getElementById('popup-wa').value.trim().replace(/\s/g,'');
-  if(!wa||wa.length<5){document.getElementById('popup-wa').style.borderColor='#ff4444';return;}
-  const cc=document.getElementById('popup-cc').value;
-  const full=cc+wa.replace(/^0+/,'');
-  fetch(SERVER_HTTP+'/contact',{method:'POST',headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},body:JSON.stringify({name:name||'Visitor',whatsapp:full})}).catch(()=>{});
-  localStorage.setItem('sfx_done','1');
-  document.getElementById('wa-popup').style.display='none';
-  showToast('✅ Registered! Salman will contact you 💬');
+// ─── Parse MT4 date "2026.04.02 02:14" → JS Date ────────────
+function parseMT4Date(str) {
+  if (!str) return new Date();
+  try {
+    const cleaned = str.replace(/\./g, "-").replace(" ", "T") + ":00";
+    const d = new Date(cleaned);
+    return isNaN(d.getTime()) ? new Date() : d;
+  } catch(e) { return new Date(); }
 }
-function skipPopup(){localStorage.setItem('sfx_done','1');document.getElementById('wa-popup').style.display='none';}
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',4000);}
 
-// ── WEBSOCKET ─────────────────────────────────────────────
-function connect(){
-  addLog('Connecting...','info');
-  try{ws=new WebSocket(WS_URL);}catch(e){addLog('Cannot connect','error');scheduleReconnect();return;}
-  ws.onopen=()=>{setConnBadge(true);addLog('✅ Connected to SalmanFX server','success');};
-  ws.onmessage=(e)=>{try{handleMsg(JSON.parse(e.data));}catch(err){}};
-  ws.onclose=()=>{setConnBadge(false);addLog('⚠️ Disconnected — retrying...','warn');scheduleReconnect();};
-  ws.onerror=()=>addLog('❌ Connection error','error');
-}
-function scheduleReconnect(){clearTimeout(reconnectTimer);reconnectTimer=setTimeout(connect,5000);}
-
-function handleMsg(msg){
-  if(msg.type==='init'){
-    msg.accounts.forEach(a=>{
-      const key=a.id==='mt4'||a.label?.toLowerCase().includes('mt4')||a.label?.toLowerCase().includes('demo')||a.label?.toLowerCase().includes('real')?'mt4':'mt5';
-      mergeAcc(key,a);
+// ─── Yahoo Finance gold price (free, no API key) ─────────────
+function fetchGoldPrice() {
+  const options = {
+    hostname: "query1.finance.yahoo.com",
+    path: "/v8/finance/chart/GC%3DF?interval=1m&range=1d",
+    method: "GET",
+    headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" }
+  };
+  const req = https.request(options, (res) => {
+    let data = "";
+    res.on("data", chunk => data += chunk);
+    res.on("end", () => {
+      try {
+        const json  = JSON.parse(data);
+        const price = json.chart.result[0].meta.regularMarketPrice;
+        if (price && price > 100) {
+          goldPrev  = goldPrice;
+          goldPrice = parseFloat(price.toFixed(2));
+          console.log(`[🪙] Gold: $${goldPrice}`);
+          broadcast({ type:"gold_price", price:goldPrice, prev:goldPrev });
+        }
+      } catch(e) {}
     });
-    if(msg.goldPrice) updateGold(msg.goldPrice);
-    updateAll(); addLog('📦 Loaded '+msg.accounts.length+' account(s)','info');
-    return;
-  }
-  if(msg.type==='gold_price'){updateGold(msg.price);return;}
-  if(msg.type==='heartbeat'){
-    const key=resolveKey(msg.accountId,msg.label);
-    accs[key].balance=msg.balance||accs[key].balance;
-    accs[key].equity=msg.equity||accs[key].equity;
-    accs[key].online=true;
-    if(msg.goldPrice) updateGold(msg.goldPrice);
-    updateAccUI(key); updateTotals();
-    addLog('♥ '+msg.label+' | $'+msg.balance,'info');
-    return;
-  }
-  if(msg.type==='trade_open'){
-    const key=resolveKey(msg.accountId,msg.label);
-    accs[key].openTrades=accs[key].openTrades.filter(t=>t.ticket!==msg.trade.ticket);
-    accs[key].openTrades.push(msg.trade);
-    renderOpen(key); addLog('→ OPEN '+msg.trade.direction+' '+msg.trade.symbol,'buy');
-    return;
-  }
-  if(msg.type==='trade_close'){
-    const key=resolveKey(msg.accountId,msg.label);
-    accs[key].trades.push(msg.trade);
-    accs[key].openTrades=accs[key].openTrades.filter(t=>t.ticket!==msg.trade.ticket);
-    if(msg.stats){accs[key].totalProfit=msg.stats.totalProfit;accs[key].wins=msg.stats.wins;accs[key].losses=msg.stats.losses;accs[key].winRate=msg.stats.winRate;}
-    renderLatest(key,msg.trade); renderOpen(key); updateAccUI(key); updateTotals(); renderHistory(); updateStats();
-    updateTikTok(key,msg.trade);
-    addLog((msg.trade.win?'✅':'❌')+' '+msg.trade.symbol+' P/L: $'+msg.trade.profit,'close',msg.trade.profit>=0);
-    if(msg.trade.profit>=0) showToast('✅ WIN +$'+msg.trade.profit+' on '+msg.trade.symbol);
-    return;
-  }
-  if(msg.type==='account_offline'){
-    const key=resolveKey(msg.accountId,'');
-    if(accs[key]) accs[key].online=false;
-    updateAccUI(key); return;
-  }
-  if(msg.type==='new_contact'){showToast('📱 New lead: '+msg.contact.name);return;}
-}
-
-function resolveKey(id,label){
-  const l=(label||'').toLowerCase();
-  if(id==='mt5'||l.includes('mt5')) return 'mt5';
-  return 'mt4';
-}
-
-function mergeAcc(key,data){
-  const a=accs[key];
-  a.trades=data.trades||a.trades;
-  a.openTrades=data.openTrades||a.openTrades;
-  a.totalProfit=data.totalProfit||a.totalProfit;
-  a.wins=data.wins||a.wins;
-  a.losses=data.losses||a.losses;
-  a.winRate=data.winRate||a.winRate;
-  a.balance=data.balance||a.balance;
-  a.online=data.online||a.online;
-}
-
-// ── GOLD ──────────────────────────────────────────────────
-function updateGold(price){
-  if(!price) return;
-  const fmt='$'+parseFloat(price).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const up=goldPrev&&price>goldPrev;
-  const dn=goldPrev&&price<goldPrev;
-  ['gold-val','tk-gold','fs-gold'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=fmt;});
-  document.getElementById('gold-val').style.color=up?'#00ff88':dn?'#ffaa44':'#ffdd44';
-  setTimeout(()=>{const e=document.getElementById('gold-val');if(e)e.style.color='#ffdd44';},1500);
-  if(goldPrev){
-    const diff=(price-goldPrev).toFixed(2);
-    document.getElementById('gold-chg').textContent=(up?'▲ +':'▼ ')+Math.abs(diff);
-    document.getElementById('gold-chg').style.color=up?'#00d4aa':'#ff6666';
-  }
-  document.getElementById('gold-time').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});
-  goldPrev=price; goldPrice=price;
-}
-
-// ── ACCOUNT UI ────────────────────────────────────────────
-function updateAccUI(key){
-  const a=accs[key];
-  const col=key==='mt4'?'#00d4aa':'#5588ff';
-  document.getElementById(key+'-dot').style.background=a.online?col:'#555';
-  const badge=document.getElementById(key+'-badge');
-  badge.textContent=a.online?'⬤ LIVE':'⬤ OFFLINE';
-  badge.style.color=a.online?col:'#555';
-  badge.style.background=a.online?col+'22':'#55555522';
-  badge.style.borderColor=a.online?col+'44':'#55555544';
-  document.getElementById(key+'-t').textContent=a.trades.length||0;
-  const wr=a.winRate||0;
-  document.getElementById(key+'-wr').textContent=wr+'%';
-  document.getElementById(key+'-wr').style.color=wr>=50?'#00d4aa':'#ff6666';
-  const pEl=document.getElementById(key+'-p');
-  pEl.textContent=(a.totalProfit>=0?'+':'')+'$'+a.totalProfit.toFixed(2);
-  pEl.style.color=a.totalProfit>=0?'#00d4aa':'#ff6666';
-  const bal=a.balance;
-  document.getElementById(key+'-b').textContent=bal>0?'$'+parseFloat(bal).toLocaleString('en-US',{maximumFractionDigits:0}):'—';
-}
-
-function updateTotals(){
-  const mt4=accs.mt4, mt5=accs.mt5;
-  const tot=mt4.trades.length+mt5.trades.length;
-  const wins=mt4.wins+mt5.wins;
-  const profit=+(mt4.totalProfit+mt5.totalProfit).toFixed(2);
-  const wr=tot>0?((wins/tot)*100).toFixed(1):0;
-  const bal=mt4.balance+mt5.balance;
-  document.getElementById('tot-t').textContent=tot;
-  document.getElementById('tot-wr').textContent=wr+'%';
-  document.getElementById('tot-wr').style.color=wr>=50?'#00d4aa':'#ff6666';
-  const tp=document.getElementById('tot-p');
-  tp.textContent=(profit>=0?'+':'')+'$'+profit.toFixed(0);
-  tp.style.color=profit>=0?'#00d4aa':'#ff6666';
-  document.getElementById('tot-b').textContent=bal>0?'$'+(bal/1000).toFixed(0)+'k':'—';
-}
-
-function updateAll(){
-  updateAccUI('mt4'); updateAccUI('mt5'); updateTotals();
-  if(accs.mt4.trades.length) renderLatest('mt4', [...accs.mt4.trades].pop());
-  if(accs.mt5.trades.length) renderLatest('mt5', [...accs.mt5.trades].pop());
-  renderOpen('mt4'); renderOpen('mt5');
-  renderHistory(); updateStats();
-}
-
-// ── RENDER LATEST TRADE ───────────────────────────────────
-function renderLatest(key,t){
-  const el=document.getElementById(key+'-latest');
-  if(!el||!t) return;
-  el.innerHTML=`<div class="new-trade" style="background:#ffffff08;border-radius:8px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center">
-    <div style="display:flex;gap:8px;align-items:center">
-      <span style="color:${t.direction==='BUY'?'#00d4aa':'#ff6666'};font-size:10px;font-weight:700">${t.direction||''}</span>
-      <span style="color:#fff;font-size:12px">${t.symbol||''}</span>
-      <span style="color:#555;font-size:10px">${t.closeTime||''}</span>
-    </div>
-    <span style="color:${t.profit>=0?'#00d4aa':'#ff6666'};font-weight:700;font-size:14px">${t.profit>=0?'+':''}$${parseFloat(t.profit||0).toFixed(2)}</span>
-  </div>`;
-}
-
-function renderOpen(key){
-  const a=accs[key];
-  const el=document.getElementById(key+'-open');
-  if(!el) return;
-  if(!a.openTrades||!a.openTrades.length){el.style.display='none';return;}
-  el.style.display='block';
-  el.innerHTML='<div style="color:#ffaa00;font-size:10px;font-weight:700;letter-spacing:1px;margin-bottom:6px">🟡 OPEN NOW</div>'+
-    a.openTrades.map(t=>`<div style="background:#ffaa0011;border:1px solid #ffaa0022;border-radius:7px;padding:7px 10px;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-      <div style="display:flex;gap:7px;align-items:center">
-        <span style="color:#ffaa00;font-size:9px;font-weight:700">OPEN</span>
-        <span style="color:${t.direction==='BUY'?'#00d4aa':'#ff6666'};font-size:10px;font-weight:700">${t.direction}</span>
-        <span style="color:#fff;font-size:11px">${t.symbol}</span>
-      </div>
-      <span style="color:#ffaa00;font-size:11px;font-weight:700">@ ${t.entry}</span>
-    </div>`).join('');
-}
-
-// ── HISTORY ───────────────────────────────────────────────
-function getAllTrades(){
-  return [...accs.mt4.trades.map(t=>({...t,acc:'mt4'})),...accs.mt5.trades.map(t=>({...t,acc:'mt5'}))].sort((a,b)=>new Date(b.date)-new Date(a.date));
-}
-
-function getFilteredTrades(){
-  const n=new Date(), today=new Date(n.getFullYear(),n.getMonth(),n.getDate());
-  const yest=new Date(today); yest.setDate(yest.getDate()-1);
-  const day3=new Date(today); day3.setDate(day3.getDate()-2);
-  const weekStart=new Date(today); weekStart.setDate(weekStart.getDate()-weekStart.getDay());
-  const monthStart=new Date(n.getFullYear(),n.getMonth(),1);
-  return getAllTrades().filter(t=>{
-    const d=new Date(t.date||Date.now());
-    let dateOk=false;
-    if(dateFilter==='today') dateOk=d>=today;
-    else if(dateFilter==='yesterday') dateOk=d>=yest&&d<today;
-    else if(dateFilter==='day3') dateOk=d>=day3&&d<yest;
-    else if(dateFilter==='week') dateOk=d>=weekStart;
-    else if(dateFilter==='month') dateOk=d>=monthStart;
-    else dateOk=true;
-    const accOk=accFilter==='all'||t.acc===accFilter;
-    return dateOk&&accOk;
   });
+  req.on("error", () => {});
+  req.end();
+}
+fetchGoldPrice();
+setInterval(fetchGoldPrice, 30000);
+
+// ─── Account helper ──────────────────────────────────────────
+function getAccount(id, label) {
+  if (!accounts[id]) {
+    accounts[id] = { id, label:label||id, trades:[], openTrades:[], totalProfit:0, wins:0, losses:0, balance:0, equity:0, currency:"USD", server:"", online:false, lastSeen:null };
+    console.log(`[+] Account: ${label||id}`);
+    broadcast({ type:"new_account", accountId:id, label:label||id });
+  }
+  return accounts[id];
 }
 
-function setDF(f,el){
-  dateFilter=f;
-  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  renderHistory();
+// ─── HTTP server ─────────────────────────────────────────────
+const server = http.createServer((req, res) => {
+  res.setHeader("Access-Control-Allow-Origin",  "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("ngrok-skip-browser-warning",   "true");
+  if (req.method === "OPTIONS") { res.writeHead(204); res.end(); return; }
+
+  if (req.method === "POST" && req.url === "/trade") {
+    let body = "";
+    req.on("data", c => body += c);
+    req.on("end", () => {
+      try { handleTradeEvent(JSON.parse(body)); res.writeHead(200); res.end('{"ok":true}'); }
+      catch(e) { res.writeHead(400); res.end("Bad JSON"); }
+    });
+    return;
+  }
+
+  if (req.method === "POST" && req.url === "/contact") {
+    let body = "";
+    req.on("data", c => body += c);
+    req.on("end", () => {
+      try {
+        const d = JSON.parse(body);
+        const contact = { name:d.name||"Visitor", whatsapp:d.whatsapp||"", time:new Date().toLocaleString("en-AE",{timeZone:"Asia/Dubai"}), ip:req.headers["x-forwarded-for"]||"unknown" };
+        contacts.push(contact);
+        console.log(`[📱] NEW LEAD: ${contact.name} — wa:+${contact.whatsapp}`);
+        broadcast({ type:"new_contact", contact });
+        res.writeHead(200); res.end('{"ok":true}');
+      } catch(e) { res.writeHead(400); res.end("err"); }
+    });
+    return;
+  }
+
+  if (req.method === "GET" && req.url === "/contacts") {
+    res.writeHead(200, {"Content-Type":"application/json"});
+    res.end(JSON.stringify({ total:contacts.length, contacts:[...contacts].reverse() }));
+    return;
+  }
+
+  if (req.method === "GET" && req.url === "/status") {
+    res.writeHead(200, {"Content-Type":"application/json"});
+    res.end(JSON.stringify({ status:"online", goldPrice, contacts:contacts.length, accounts:Object.keys(accounts).map(id=>({ id, label:accounts[id].label, trades:accounts[id].trades.length, profit:accounts[id].totalProfit, online:accounts[id].online, balance:accounts[id].balance })) }));
+    return;
+  }
+
+  res.writeHead(404); res.end("Not found");
+});
+
+// ─── WebSocket ───────────────────────────────────────────────
+const wss = new WebSocket.Server({ server });
+wss.on("connection", ws => {
+  console.log("[WS] Dashboard connected");
+  ws.send(JSON.stringify({ type:"init", accounts:buildSummary(), goldPrice }));
+  ws.on("close", () => console.log("[WS] Dashboard disconnected"));
+});
+
+function broadcast(data) {
+  const msg = JSON.stringify(data);
+  wss.clients.forEach(c => { if (c.readyState === WebSocket.OPEN) c.send(msg); });
 }
 
-function setAF(f,el){
-  accFilter=f;
-  ['all','mt4','mt5'].forEach(k=>{const e=document.getElementById('af-'+k);if(e)e.classList.remove('active');});
-  el.classList.add('active');
-  renderHistory();
+// ─── Trade Events ─────────────────────────────────────────────
+function handleTradeEvent(data) {
+  const acc = getAccount(data.accountId, data.accountLabel);
+
+  if (data.event === "heartbeat") {
+    acc.online=true; acc.lastSeen=new Date();
+    acc.balance  = data.balance  || acc.balance;
+    acc.equity   = data.equity   || acc.equity;
+    acc.currency = data.currency || acc.currency;
+    acc.server   = data.server   || acc.server;
+    // Only use MT4 gold if Yahoo hasn't loaded yet
+    if (!goldPrice && data.goldPrice && data.goldPrice > 100) {
+      goldPrice = data.goldPrice;
+      broadcast({ type:"gold_price", price:goldPrice });
+    }
+    console.log(`[♥] ${acc.label} | $${acc.balance} | XAU:${goldPrice||'?'}`);
+    broadcast({ type:"heartbeat", accountId:acc.id, label:acc.label, balance:acc.balance, equity:acc.equity, online:true, goldPrice });
+    return;
+  }
+
+  if (data.event === "open") {
+    if (data.direction === "OTHER") return; // skip pending orders
+    acc.openTrades = acc.openTrades.filter(t => t.ticket !== data.ticket);
+    const trade = { ticket:data.ticket, symbol:data.symbol, direction:data.direction, entry:data.entry, lots:data.lots, sl:data.sl, tp:data.tp, time:data.time, comment:data.comment||"" };
+    acc.openTrades.push(trade);
+    console.log(`[→] OPEN ${acc.label}: ${data.direction} ${data.symbol} @ ${data.entry}`);
+    broadcast({ type:"trade_open", accountId:acc.id, label:acc.label, trade });
+    return;
+  }
+
+  if (data.event === "close") {
+    acc.openTrades = acc.openTrades.filter(t => t.ticket !== data.ticket);
+
+    // ✅ KEY FIX: parse real MT4 close date
+    const closeDate = parseMT4Date(data.closeTime);
+
+    const trade = {
+      ticket:data.ticket, symbol:data.symbol, direction:data.direction,
+      entry:data.entry, exit:data.exit, profit:data.profit, lots:data.lots,
+      win:data.win, comment:data.comment||"",
+      openTime:data.openTime, closeTime:data.closeTime,
+      date: closeDate.toISOString()  // ← real date from MT4!
+    };
+
+    // Prevent duplicates (same ticket sent twice)
+    if (acc.trades.some(t => t.ticket === data.ticket && t.profit === data.profit)) return;
+
+    acc.trades.push(trade);
+    acc.totalProfit = +(acc.totalProfit + data.profit).toFixed(2);
+    if (data.win) acc.wins++; else acc.losses++;
+    const winRate = acc.trades.length > 0 ? +((acc.wins/acc.trades.length)*100).toFixed(1) : 0;
+    acc.winRate = winRate;
+
+    console.log(`[✓] CLOSE ${acc.label}: ${data.symbol} P/L:$${data.profit} | Total:$${acc.totalProfit}`);
+    broadcast({ type:"trade_close", accountId:acc.id, label:acc.label, trade, stats:{ totalProfit:acc.totalProfit, wins:acc.wins, losses:acc.losses, total:acc.trades.length, winRate } });
+    return;
+  }
 }
 
-function renderHistory(){
-  const list=getFilteredTrades();
-  const wins=list.filter(t=>t.win).length;
-  const profit=list.reduce((s,t)=>+(s+parseFloat(t.profit||0)).toFixed(2),0);
-  const wr=list.length>0?((wins/list.length)*100).toFixed(1):0;
-  document.getElementById('h-cnt').textContent=list.length;
-  document.getElementById('h-wr').textContent=wr+'%';
-  document.getElementById('h-wr').style.color=wr>=50?'#00d4aa':'#ff6666';
-  const hp=document.getElementById('h-profit');
-  hp.textContent=(profit>=0?'+':'')+'$'+profit.toFixed(2);
-  hp.style.color=profit>=0?'#00d4aa':'#ff6666';
-  document.getElementById('h-wins').textContent=wins;
-  const empty=document.getElementById('h-empty'), hlist=document.getElementById('h-list');
-  if(!list.length){empty.style.display='block';hlist.innerHTML='';return;}
-  empty.style.display='none';
-  const acColor=k=>k==='mt4'?'#00d4aa':'#5588ff';
-  const acLabel=k=>k==='mt4'?'MT4':'MT5';
-  hlist.innerHTML=list.map(t=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1e2530">
-    <div>
-      <div style="display:flex;gap:6px;align-items:center;margin-bottom:3px">
-        <span style="background:${acColor(t.acc)}22;color:${acColor(t.acc)};font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;border:1px solid ${acColor(t.acc)}33">${acLabel(t.acc)}</span>
-        <span style="color:${t.direction==='BUY'?'#00d4aa':'#ff6666'};font-size:10px;font-weight:700">${t.direction}</span>
-        <span style="color:#fff;font-size:12px">${t.symbol}</span>
-      </div>
-      <span style="color:#555;font-size:10px">${t.closeTime||''}</span>
-    </div>
-    <div style="text-align:right">
-      <div style="color:${t.profit>=0?'#00d4aa':'#ff6666'};font-weight:700;font-size:14px">${t.profit>=0?'+':''}$${parseFloat(t.profit||0).toFixed(2)}</div>
-      <div style="color:${t.win?'#00d4aa':'#ff6666'};font-size:10px">${t.win?'✅ WIN':'❌ LOSS'}</div>
-    </div>
-  </div>`).join('');
+// ─── Build init summary ──────────────────────────────────────
+function buildSummary() {
+  return Object.values(accounts).map(acc => ({
+    id:acc.id, label:acc.label, trades:acc.trades, openTrades:acc.openTrades,
+    totalProfit:acc.totalProfit, wins:acc.wins, losses:acc.losses,
+    balance:acc.balance, equity:acc.equity, currency:acc.currency,
+    online:acc.online, lastSeen:acc.lastSeen,
+    winRate: acc.trades.length > 0 ? +((acc.wins/acc.trades.length)*100).toFixed(1) : 0
+  }));
 }
 
-// ── STATS ─────────────────────────────────────────────────
-function updateStats(){
-  ['mt4','mt5'].forEach(key=>{
-    const a=accs[key];
-    const wr=a.winRate||0;
-    document.getElementById('st-'+key+'-wr').textContent=wr>0?wr+'%':'—';
-    document.getElementById('st-'+key+'-wr').style.color=wr>=50?'#00d4aa':'#fff';
-    const pEl=document.getElementById('st-'+key+'-p');
-    pEl.textContent=a.trades.length?(a.totalProfit>=0?'+':'')+'$'+a.totalProfit.toFixed(2):'—';
-    pEl.style.color=a.totalProfit>=0?'#00d4aa':'#ff6666';
-    document.getElementById('st-'+key+'-t').textContent=(a.trades.length||0)+' trades';
-    const best=a.trades.length?Math.max(...a.trades.map(t=>parseFloat(t.profit||0))):null;
-    document.getElementById('st-'+key+'-best').textContent=best!==null?'🏆 best: +$'+best.toFixed(2):'best: —';
+// ─── Offline detection ───────────────────────────────────────
+setInterval(() => {
+  const now = Date.now();
+  Object.values(accounts).forEach(acc => {
+    if (acc.online && acc.lastSeen && (now - new Date(acc.lastSeen).getTime()) > 120000) {
+      acc.online = false;
+      console.log(`[!] ${acc.label} went offline`);
+      broadcast({ type:"account_offline", accountId:acc.id });
+    }
   });
-  const allTrades=getAllTrades();
-  const pairs={};
-  allTrades.forEach(t=>{pairs[t.symbol]=(pairs[t.symbol]||0)+1;});
-  document.getElementById('pairs-list').innerHTML=Object.entries(pairs).sort((a,b)=>b[1]-a[1]).map(([p,c])=>`
-    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e2530">
-      <span style="color:#fff">${p}</span><span style="color:#5588ff;font-weight:700">${c} trades</span>
-    </div>`).join('')||'<div style="color:#555;font-size:12px">No data yet</div>';
-}
+}, 30000);
 
-// ── TIKTOK ────────────────────────────────────────────────
-function updateTikTok(key,t){
-  const col=key==='mt4'?'#00d4aa':'#5588ff';
-  const label=key.toUpperCase();
-  ['tk','fs'].forEach(p=>{
-    const r=document.getElementById(p+'-result');
-    const am=document.getElementById(p+'-amount');
-    const sy=document.getElementById(p+'-sym');
-    const ac=document.getElementById(p+'-acc');
-    const box=document.getElementById(p+'-box');
-    if(r){r.textContent=t.win?'✅ WIN':'❌ LOSS';r.style.color=t.win?'#00d4aa':'#ff6666';}
-    if(am){am.textContent=(t.profit>=0?'+':'')+'$'+parseFloat(t.profit||0).toFixed(2);am.style.color=t.profit>=0?'#00ff88':'#ff6666';}
-    if(sy) sy.textContent=(t.direction||'')+' '+(t.symbol||'');
-    if(ac){ac.textContent=label;ac.style.color=col;}
-    if(box) box.style.borderColor=col+'66';
-  });
-  const mt4=accs.mt4, mt5=accs.mt5;
-  document.getElementById('tk-mt4-wr').textContent=mt4.winRate>0?mt4.winRate+'%':'—';
-  document.getElementById('tk-mt4-p').textContent=mt4.totalProfit?(mt4.totalProfit>=0?'+':'')+'$'+mt4.totalProfit.toFixed(0)+' profit':'— profit';
-  document.getElementById('tk-mt5-wr').textContent=mt5.winRate>0?mt5.winRate+'%':'—';
-  document.getElementById('tk-mt5-p').textContent=mt5.totalProfit?(mt5.totalProfit>=0?'+':'')+'$'+mt5.totalProfit.toFixed(0)+' profit':'— profit';
-  const fsmt4wr=document.getElementById('fs-mt4-wr'),fsmt4p=document.getElementById('fs-mt4-p');
-  const fsmt5wr=document.getElementById('fs-mt5-wr'),fsmt5p=document.getElementById('fs-mt5-p');
-  if(fsmt4wr) fsmt4wr.textContent=mt4.winRate>0?mt4.winRate+'%':'—';
-  if(fsmt4p)  fsmt4p.textContent=mt4.totalProfit?(mt4.totalProfit>=0?'+':'')+'$'+mt4.totalProfit.toFixed(0):'—';
-  if(fsmt5wr) fsmt5wr.textContent=mt5.winRate>0?mt5.winRate+'%':'—';
-  if(fsmt5p)  fsmt5p.textContent=mt5.totalProfit?(mt5.totalProfit>=0?'+':'')+'$'+mt5.totalProfit.toFixed(0):'—';
-}
-
-// ── LOGS ──────────────────────────────────────────────────
-function addLog(text,type,win){
-  const t=new Date().toLocaleTimeString('en-US',{hour12:false});
-  logs.unshift({text,type:type||(win?'profit':'loss'),ts:'['+t+']'});
-  if(logs.length>50) logs.pop();
-  const c={info:'#888',success:'#00d4aa',buy:'#00d4aa',sell:'#ff6666',profit:'#00d4aa',loss:'#ff6666',warn:'#ffaa00',error:'#ff4444',close:'#5588ff'};
-  document.getElementById('log-cnt').textContent=logs.length+' events';
-  document.getElementById('log-body').innerHTML=logs.map(l=>`<div style="margin-bottom:2px"><span style="color:#444">${l.ts} </span><span style="color:${c[l.type]||'#888'}">${l.text}</span></div>`).join('');
-}
-
-function setConnBadge(on){
-  const b=document.getElementById('conn-badge');
-  b.textContent=on?'⬤ LIVE':'⬤ OFFLINE';
-  b.style.color=on?'#00d4aa':'#ff6666';
-  b.style.background=on?'#00d4aa22':'#ff444422';
-  b.style.borderColor=on?'#00d4aa44':'#ff444444';
-}
-
-function switchTab(name,el){
-  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.tab-bar .tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');el.classList.add('active');
-  if(name==='history') renderHistory();
-  if(name==='stats') updateStats();
-}
-
-function goFS(){document.getElementById('fs').style.display='block';}
-
-connect();
-</script>
-</body>
-</html>
+// ─── Start ───────────────────────────────────────────────────
+server.listen(PORT, () => {
+  console.log("╔══════════════════════════════════════╗");
+  console.log("║  SalmanFX Server v3 — RUNNING 🟢     ║");
+  console.log(`║  http://localhost:${PORT}               ║`);
+  console.log("║  GET  /status    → server health     ║");
+  console.log("║  GET  /contacts  → see all leads 📱  ║");
+  console.log("║  Gold: Yahoo Finance auto 🪙          ║");
+  console.log("╚══════════════════════════════════════╝");
+});
