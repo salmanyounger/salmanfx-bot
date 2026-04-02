@@ -382,14 +382,32 @@ function setLast(k,t){
 }
 
 function renderOpen(k){
-  const a=A[k],w=E('d'+k[2]+'open'),l=E('d'+k[2]+'open');
-  if(!l)return;if(!a.openTrades||!a.openTrades.length){l.style.display='none';return;}
-  l.style.display='block';
-  l.innerHTML='<div style="color:#ffaa00;font-size:10px;font-weight:700;letter-spacing:1px;margin-bottom:6px">🟡 OPEN NOW</div>'+
-    a.openTrades.map(t=>`<div style="background:#ffaa0011;border:1px solid #ffaa0022;border-radius:7px;padding:7px 10px;display:flex;justify-content:space-between;margin-bottom:4px">
-      <div><span style="color:#ffaa00;font-size:9px;font-weight:700">OPEN</span> <span style="color:${t.direction==='BUY'?'#00d4aa':'#ff6666'};font-size:10px;font-weight:700">${t.direction}</span> <span style="color:#fff;font-size:11px">${t.symbol}</span></div>
-      <span style="color:#ffaa00;font-size:11px;font-weight:700">@ ${t.entry}</span>
-    </div>`).join('');
+  const a=A[k],wrap=E('d'+k[2]+'open');
+  if(!wrap)return;
+  if(!a.openTrades||!a.openTrades.length){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  wrap.innerHTML='<div style="color:#ffaa00;font-size:10px;font-weight:700;letter-spacing:1px;margin-bottom:6px">🟡 OPEN TRADES — LIVE P&L</div>'+
+    a.openTrades.map((t,i)=>{
+      const fl=calcFL(t);
+      const flCol=fl>=0?'#00d4aa':'#ff6666';
+      const dirCol=t.direction==='BUY'?'#00d4aa':'#ff6666';
+      return `<div class="opentrade" data-k="${k}" data-i="${i}" style="background:#ffffff08;border:1px solid #2a3040;border-radius:8px;padding:9px 12px;margin-bottom:5px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+          <div style="display:flex;gap:7px;align-items:center">
+            <span style="color:${dirCol};font-size:10px;font-weight:700;background:${dirCol}11;padding:2px 7px;border-radius:3px">${t.direction}</span>
+            <span style="color:#fff;font-size:13px;font-weight:700">${t.symbol}</span>
+            <span style="color:#555;font-size:10px">${t.lots} lots</span>
+          </div>
+          <span class="fl-${k}-${i}" style="font-size:14px;font-weight:700;color:${flCol}">${fl>=0?'+':''}$${fl.toFixed(2)}</span>
+        </div>
+        <div style="display:flex;gap:12px;font-size:10px">
+          <span><span style="color:#555">Entry </span><span style="color:#ffdd44">${parseFloat(t.entry).toFixed(3)}</span></span>
+          <span><span style="color:#555">Now </span><span class="cur-price" style="color:#fff">${gold?gold.toFixed(2):'—'}</span></span>
+          ${t.sl>0?`<span><span style="color:#555">SL </span><span style="color:#ff6666">${parseFloat(t.sl).toFixed(3)}</span></span>`:''}
+          ${t.tp>0?`<span><span style="color:#555">TP </span><span style="color:#00d4aa">${parseFloat(t.tp).toFixed(3)}</span></span>`:''}
+        </div>
+      </div>`;
+    }).join('');
 }
 
 // ── HISTORY — direct API fetch ─────────────────────────
@@ -477,6 +495,36 @@ function updateTikTok(k,t){
     if(box)box.style.borderColor=col+'66';
   });
 }
+
+// ── Floating P&L calculation ─────────────────────
+function calcFL(trade){
+  if(!gold||!trade||!trade.entry) return 0;
+  const entry=parseFloat(trade.entry)||0;
+  const lots=parseFloat(trade.lots)||0.01;
+  const diff=trade.direction==='BUY'?(gold-entry):(entry-gold);
+  return parseFloat((diff*lots*100).toFixed(2));
+}
+
+// Update floating P&L every second
+setInterval(()=>{
+  if(!gold) return;
+  let totalFL=0, totalOpen=0;
+  ['mt4','mt5'].forEach(k=>{
+    const a=A[k];
+    if(!a.openTrades||!a.openTrades.length) return;
+    let accFL=0;
+    a.openTrades.forEach((t,i)=>{
+      const fl=calcFL(t);
+      accFL+=fl;
+      const el=document.querySelector('.fl-'+k+'-'+i);
+      if(el){el.textContent=(fl>=0?'+':'')+'$'+fl.toFixed(2);el.style.color=fl>=0?'#00d4aa':'#ff6666';}
+      // update current price
+      document.querySelectorAll('.cur-price').forEach(e=>e.textContent=gold.toFixed(2));
+    });
+    totalFL+=accFL;
+    totalOpen+=a.openTrades.length;
+  });
+},1000);
 
 // ── Helpers ────────────────────────────────────────────
 function E(id){return document.getElementById(id);}
