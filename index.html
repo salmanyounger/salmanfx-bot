@@ -12,17 +12,15 @@ body{background:#0a0c10;color:#fff;font-family:'Courier New',monospace;padding-b
 .tab.on{background:#00d4aa22;color:#00d4aa;border-color:#00d4aa66}
 .pane{display:none}.pane.on{display:block}
 .card{background:#161b24;border:1px solid #2a3040;border-radius:12px;padding:14px 16px;margin-bottom:12px}
-.fbtn{background:#0d1117;border:1px solid #2a3040;border-radius:20px;padding:5px 12px;font-size:10px;color:#888;cursor:pointer;white-space:nowrap;font-family:'Courier New',monospace;font-weight:700;flex-shrink:0}
-.fbtn.on{background:#5588ff22;color:#5588ff;border-color:#5588ff55}
-.afbtn{border-radius:20px;padding:4px 12px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Courier New',monospace;flex-shrink:0;border:1px solid transparent}
-.g{color:#00d4aa}.r{color:#ff4444}.y{color:#ffdd44}.o{color:#ffaa00}
-.mini{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.mini{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
 .mc{background:#ffffff08;border-radius:8px;padding:8px 4px;text-align:center}
 .acc{border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.wa{position:fixed;bottom:20px;right:16px;background:#25d366;border-radius:50%;width:56px;height:56px;display:flex;align-items:center;justify-content:center;font-size:28px;text-decoration:none;z-index:998;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 4px 24px #25d36666}50%{box-shadow:0 4px 32px #25d366cc}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-@keyframes tick{from{transform:translateY(-6px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes flash{0%{opacity:1}50%{opacity:.2}100%{opacity:1}}
 .blink{animation:blink 1s infinite}
-.wa{position:fixed;bottom:20px;right:16px;background:#25d366;border-radius:50%;width:56px;height:56px;display:flex;align-items:center;justify-content:center;font-size:28px;text-decoration:none;z-index:998;box-shadow:0 4px 24px #25d36666}
+.flash{animation:flash .4s ease}
 </style>
 </head>
 <body>
@@ -40,20 +38,20 @@ body{background:#0a0c10;color:#fff;font-family:'Courier New',monospace;padding-b
 
 <div style="padding:16px">
 
-<!-- GOLD -->
+<!-- GOLD TICKER -->
 <div style="background:linear-gradient(135deg,#1a1200,#0d0800);border:1px solid #ffaa0044;border-radius:14px;padding:14px 16px;margin-bottom:12px">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
     <span style="color:#888;font-size:10px">🪙 XAU/USD LIVE GOLD</span>
-    <span style="color:#555;font-size:10px" id="gtime">—</span>
+    <span style="color:#555;font-size:10px" id="gt">—</span>
   </div>
-  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
-    <div id="gprice" style="color:#ffdd44;font-size:34px;font-weight:700">Loading...</div>
-    <div id="garrow" style="font-size:20px">—</div>
+  <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:4px">
+    <div id="gp" style="color:#ffdd44;font-size:36px;font-weight:700">—</div>
+    <div id="ga" style="font-size:22px">—</div>
+    <div id="gc" style="font-size:13px;font-weight:700;color:#888">—</div>
   </div>
   <div style="display:flex;gap:16px">
-    <div><span style="color:#555;font-size:10px">Change </span><span id="gchg" style="font-size:12px;font-weight:700;color:#888">—</span></div>
-    <div><span style="color:#555;font-size:10px">High </span><span id="ghi" style="font-size:12px;font-weight:700" class="g">—</span></div>
-    <div><span style="color:#555;font-size:10px">Low </span><span id="glo" style="font-size:12px;font-weight:700" class="r">—</span></div>
+    <span><span style="color:#555;font-size:10px">High </span><span id="gh" style="color:#00d4aa;font-size:11px;font-weight:700">—</span></span>
+    <span><span style="color:#555;font-size:10px">Low </span><span id="gl" style="color:#ff6666;font-size:11px;font-weight:700">—</span></span>
   </div>
 </div>
 
@@ -67,33 +65,34 @@ body{background:#0a0c10;color:#fff;font-family:'Courier New',monospace;padding-b
 <!-- COMBINED -->
 <div style="background:linear-gradient(135deg,#0d1a2e,#0d2a1e);border:1px solid #ffffff11;border-radius:14px;padding:14px 16px;margin-bottom:14px">
   <div style="display:flex;justify-content:space-between;margin-bottom:10px">
-    <span style="color:#888;font-size:10px;letter-spacing:2px">📊 COMBINED</span>
-    <span style="color:#555;font-size:10px"><span class="blink" style="color:#00d4aa">⬤</span> UPDATING LIVE</span>
+    <span style="color:#888;font-size:10px;letter-spacing:2px">📊 COMBINED ALL ACCOUNTS</span>
+    <span><span class="blink" style="color:#00d4aa;font-size:8px">⬤</span> <span style="color:#555;font-size:10px">LIVE</span></span>
   </div>
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
-    <div style="text-align:center"><div style="color:#888;font-size:9px">Trades</div><div id="ctrades" style="color:#fff;font-size:20px;font-weight:700">—</div></div>
-    <div style="text-align:center"><div style="color:#888;font-size:9px">Win Rate</div><div id="cwr" style="font-size:20px;font-weight:700" class="g">—</div></div>
-    <div style="text-align:center"><div style="color:#888;font-size:9px">Profit</div><div id="cprofit" style="font-size:18px;font-weight:700" class="g">—</div></div>
-    <div style="text-align:center"><div style="color:#888;font-size:9px">Balance</div><div id="cbal" style="color:#ffdd44;font-size:16px;font-weight:700">—</div></div>
+    <div style="text-align:center"><div style="color:#888;font-size:9px">Trades</div><div id="ct" style="color:#fff;font-size:20px;font-weight:700">—</div></div>
+    <div style="text-align:center"><div style="color:#888;font-size:9px">Win Rate</div><div id="cw" style="font-size:20px;font-weight:700;color:#00d4aa">—</div></div>
+    <div style="text-align:center"><div style="color:#888;font-size:9px">Profit</div><div id="cp" style="font-size:18px;font-weight:700;color:#00d4aa">—</div></div>
+    <div style="text-align:center"><div style="color:#888;font-size:9px">Equity</div><div id="ce" style="font-size:16px;font-weight:700;color:#ffdd44">—</div></div>
   </div>
 </div>
 
 <!-- TABS -->
 <div class="tabs">
   <div class="tab on" onclick="sw('live',this)">⚡ Live</div>
-  <div class="tab" onclick="sw('history',this)">📋 History</div>
   <div class="tab" onclick="sw('stats',this)">📊 Stats</div>
   <div class="tab" onclick="sw('tiktok',this)">🔴 TikTok</div>
   <div class="tab" onclick="sw('partner',this)">🤝 Partner</div>
   <div class="tab" onclick="sw('about',this)">ℹ️ About</div>
 </div>
 
-<!-- LIVE -->
+<!-- ══ LIVE TAB ══ -->
 <div id="pane-live" class="pane on">
+
+  <!-- MT4 ACCOUNT -->
   <div class="acc" style="background:#0d1a0d;border:1px solid #00d4aa33">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:8px">
-        <div id="d4" style="width:9px;height:9px;border-radius:50%;background:#555"></div>
+        <div id="d4dot" style="width:9px;height:9px;border-radius:50%;background:#555"></div>
         <span style="color:#fff;font-size:14px;font-weight:700">MT4 Account</span>
         <span style="background:#00d4aa22;color:#00d4aa;border:1px solid #00d4aa33;border-radius:4px;padding:2px 7px;font-size:9px;font-weight:700">MT4</span>
       </div>
@@ -101,17 +100,21 @@ body{background:#0a0c10;color:#fff;font-family:'Courier New',monospace;padding-b
     </div>
     <div class="mini">
       <div class="mc"><div style="color:#888;font-size:9px">Trades</div><div id="d4t" style="color:#fff;font-size:18px;font-weight:700">—</div></div>
-      <div class="mc"><div style="color:#888;font-size:9px">Win</div><div id="d4w" style="font-size:18px;font-weight:700" class="g">—</div></div>
-      <div class="mc"><div style="color:#888;font-size:9px">Profit</div><div id="d4p" style="font-size:14px;font-weight:700" class="g">—</div></div>
+      <div class="mc"><div style="color:#888;font-size:9px">Win%</div><div id="d4w" style="font-size:18px;font-weight:700;color:#00d4aa">—</div></div>
+      <div class="mc"><div style="color:#888;font-size:9px">Profit</div><div id="d4p" style="font-size:14px;font-weight:700;color:#00d4aa">—</div></div>
       <div class="mc"><div style="color:#888;font-size:9px">Balance</div><div id="d4b" style="color:#fff;font-size:13px;font-weight:700">—</div></div>
     </div>
-    <div id="d4open" style="display:none;margin-bottom:8px"></div>
+    <!-- OPEN TRADES MT4 -->
+    <div id="d4open" style="display:none"></div>
+    <!-- LAST CLOSED -->
     <div id="d4last"></div>
   </div>
+
+  <!-- MT5 ACCOUNT -->
   <div class="acc" style="background:#0d0d1a;border:1px solid #5588ff33">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:8px">
-        <div id="d5" style="width:9px;height:9px;border-radius:50%;background:#555"></div>
+        <div id="d5dot" style="width:9px;height:9px;border-radius:50%;background:#555"></div>
         <span style="color:#fff;font-size:14px;font-weight:700">MT5 Account</span>
         <span style="background:#5588ff22;color:#5588ff;border:1px solid #5588ff33;border-radius:4px;padding:2px 7px;font-size:9px;font-weight:700">MT5</span>
       </div>
@@ -119,74 +122,49 @@ body{background:#0a0c10;color:#fff;font-family:'Courier New',monospace;padding-b
     </div>
     <div class="mini">
       <div class="mc"><div style="color:#888;font-size:9px">Trades</div><div id="d5t" style="color:#fff;font-size:18px;font-weight:700">—</div></div>
-      <div class="mc"><div style="color:#888;font-size:9px">Win</div><div id="d5w" style="font-size:18px;font-weight:700" class="g">—</div></div>
-      <div class="mc"><div style="color:#888;font-size:9px">Profit</div><div id="d5p" style="font-size:14px;font-weight:700" class="g">—</div></div>
+      <div class="mc"><div style="color:#888;font-size:9px">Win%</div><div id="d5w" style="font-size:18px;font-weight:700;color:#5588ff">—</div></div>
+      <div class="mc"><div style="color:#888;font-size:9px">Profit</div><div id="d5p" style="font-size:14px;font-weight:700;color:#00d4aa">—</div></div>
       <div class="mc"><div style="color:#888;font-size:9px">Balance</div><div id="d5b" style="color:#fff;font-size:13px;font-weight:700">—</div></div>
     </div>
-    <div id="d5open" style="display:none;margin-bottom:8px"></div>
+    <div id="d5open" style="display:none"></div>
     <div id="d5last"></div>
   </div>
-  <div style="background:#0d1117;border:1px solid #2a3040;border-radius:12px;overflow:hidden">
+
+  <!-- LIVE FEED -->
+  <div class="card" style="padding:0;overflow:hidden">
     <div style="padding:10px 14px;border-bottom:1px solid #1e2530;display:flex;justify-content:space-between">
       <span style="color:#fff;font-size:12px;font-weight:700">🖥 Live Feed</span>
       <span id="lcnt" style="color:#888;font-size:11px">0 events</span>
     </div>
-    <div id="lbody" style="padding:10px 14px;max-height:150px;overflow-y:auto;font-size:11px;line-height:1.9"><div style="color:#555;font-style:italic">Connecting...</div></div>
+    <div id="lbody" style="padding:10px 14px;max-height:160px;overflow-y:auto;font-size:11px;line-height:1.9"><div style="color:#555;font-style:italic">Connecting...</div></div>
   </div>
 </div>
 
-<!-- HISTORY — loads directly from /trades API -->
-<div id="pane-history" class="pane">
-  <!-- Filter buttons -->
-  <div style="display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;padding-bottom:2px">
-    <div class="fbtn on" onclick="hFilter('24h',this)">⏱ Last 24h</div>
-    <div class="fbtn" onclick="hFilter('7d',this)">📆 Last 7 Days</div>
-    <div class="fbtn" onclick="hFilter('30d',this)">🗓 Last 30 Days</div>
-    <div class="fbtn" onclick="hFilter('all',this)">📋 All Time</div>
-  </div>
-  <div style="display:flex;gap:6px;margin-bottom:12px">
-    <div class="afbtn on" id="af-all" onclick="aFilter('all',this)" style="background:#ffffff11;color:#fff;border-color:#ffffff22">All</div>
-    <div class="afbtn" id="af-mt4" onclick="aFilter('mt4',this)" style="background:#00d4aa11;color:#00d4aa;border-color:#00d4aa33">MT4</div>
-    <div class="afbtn" id="af-mt5" onclick="aFilter('mt5',this)" style="background:#5588ff11;color:#5588ff;border-color:#5588ff33">MT5</div>
-  </div>
-  <!-- Summary bar -->
-  <div style="background:#161b24;border:1px solid #2a3040;border-radius:10px;padding:10px 16px;margin-bottom:12px;display:flex;gap:16px;flex-wrap:wrap">
-    <div><div style="color:#888;font-size:10px">Trades</div><div id="hcnt" style="color:#fff;font-weight:700;font-size:20px">—</div></div>
-    <div><div style="color:#888;font-size:10px">Win Rate</div><div id="hwr" style="font-weight:700;font-size:20px" class="g">—</div></div>
-    <div><div style="color:#888;font-size:10px">Profit</div><div id="hprofit" style="font-weight:700;font-size:20px" class="g">—</div></div>
-    <div><div style="color:#888;font-size:10px">Wins</div><div id="hwins" style="font-weight:700;font-size:20px" class="g">—</div></div>
-  </div>
-  <div id="hloading" style="color:#555;text-align:center;padding:20px;font-size:13px">Loading trades from server...</div>
-  <div class="card" style="padding:0;overflow:hidden;display:none" id="htable">
-    <div id="hlist" style="padding:0 16px"></div>
-  </div>
-  <div id="hempty" style="color:#555;font-size:12px;text-align:center;padding:28px;display:none">No trades in this period</div>
-</div>
-
-<!-- STATS -->
+<!-- ══ STATS TAB ══ -->
 <div id="pane-stats" class="pane">
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
     <div style="background:#0d1a0d;border:1px solid #00d4aa33;border-radius:12px;padding:14px;text-align:center">
       <div style="color:#00d4aa;font-size:10px;font-weight:700;margin-bottom:10px">MT4</div>
-      <div id="st4wr" style="color:#fff;font-size:28px;font-weight:700">—</div>
+      <div id="s4wr" style="color:#fff;font-size:28px;font-weight:700">—</div>
       <div style="color:#888;font-size:10px;margin-bottom:8px">win rate</div>
-      <div id="st4p" class="g" style="font-size:16px;font-weight:700">—</div>
+      <div id="s4p" style="color:#00d4aa;font-size:16px;font-weight:700">—</div>
       <div style="color:#888;font-size:10px;margin-bottom:4px">profit</div>
-      <div id="st4t" style="color:#fff;font-size:13px">— trades</div>
+      <div id="s4t" style="color:#fff;font-size:13px">— trades</div>
+      <div id="s4bal" style="color:#ffdd44;font-size:12px;margin-top:4px">Balance: —</div>
     </div>
     <div style="background:#0d0d1a;border:1px solid #5588ff33;border-radius:12px;padding:14px;text-align:center">
       <div style="color:#5588ff;font-size:10px;font-weight:700;margin-bottom:10px">MT5</div>
-      <div id="st5wr" style="color:#fff;font-size:28px;font-weight:700">—</div>
+      <div id="s5wr" style="color:#fff;font-size:28px;font-weight:700">—</div>
       <div style="color:#888;font-size:10px;margin-bottom:8px">win rate</div>
-      <div id="st5p" class="g" style="font-size:16px;font-weight:700">—</div>
+      <div id="s5p" style="color:#00d4aa;font-size:16px;font-weight:700">—</div>
       <div style="color:#888;font-size:10px;margin-bottom:4px">profit</div>
-      <div id="st5t" style="color:#fff;font-size:13px">— trades</div>
+      <div id="s5t" style="color:#fff;font-size:13px">— trades</div>
+      <div id="s5bal" style="color:#ffdd44;font-size:12px;margin-top:4px">Balance: —</div>
     </div>
   </div>
-  <div class="card"><div style="color:#fff;font-size:12px;font-weight:700;margin-bottom:12px">🎯 Pairs Traded</div><div id="pairs">—</div></div>
 </div>
 
-<!-- TIKTOK -->
+<!-- ══ TIKTOK TAB ══ -->
 <div id="pane-tiktok" class="pane">
   <div style="background:#0a0c10;border:2px solid #00d4aa33;border-radius:16px;padding:20px;text-align:center;margin-bottom:12px">
     <div style="color:#888;font-size:10px;letter-spacing:2px;margin-bottom:4px">🪙 XAU/USD LIVE</div>
@@ -195,14 +173,20 @@ body{background:#0a0c10;color:#fff;font-family:'Courier New',monospace;padding-b
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       <div style="background:#0d1a0d;border:1px solid #00d4aa33;border-radius:10px;padding:12px">
         <div style="color:#888;font-size:9px">MT4 Win Rate</div>
-        <div id="tk4wr" class="g" style="font-size:28px;font-weight:700">—</div>
-        <div id="tk4p" class="g" style="font-size:11px">—</div>
+        <div id="tk4wr" style="color:#00d4aa;font-size:28px;font-weight:700">—</div>
+        <div id="tk4p" style="color:#00d4aa;font-size:11px">—</div>
       </div>
       <div style="background:#0d0d1a;border:1px solid #5588ff33;border-radius:10px;padding:12px">
         <div style="color:#888;font-size:9px">MT5 Win Rate</div>
         <div id="tk5wr" style="color:#5588ff;font-size:28px;font-weight:700">—</div>
         <div id="tk5p" style="color:#5588ff;font-size:11px">—</div>
       </div>
+    </div>
+    <!-- Total Floating P&L -->
+    <div id="tkfl-wrap" style="background:#1a1200;border:2px solid #ffaa0044;border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="color:#888;font-size:10px;letter-spacing:1px;margin-bottom:4px">🟡 TOTAL FLOATING P&L</div>
+      <div id="tkfl" style="color:#ffaa00;font-size:40px;font-weight:700">$0.00</div>
+      <div id="tkoc" style="color:#888;font-size:11px">0 open trades</div>
     </div>
     <div id="tkbox" style="background:#0d2a1e;border:2px solid #00d4aa44;border-radius:12px;padding:16px;margin-bottom:12px">
       <div id="tkacc" style="color:#888;font-size:10px;letter-spacing:1px;margin-bottom:4px">—</div>
@@ -215,7 +199,7 @@ body{background:#0a0c10;color:#fff;font-family:'Courier New',monospace;padding-b
   <button onclick="document.getElementById('fs').style.display='block'" style="width:100%;background:linear-gradient(135deg,#ff0044,#ff6600);color:#fff;border:none;border-radius:10px;padding:13px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Courier New',monospace">🔴 FULLSCREEN — TikTok Live</button>
 </div>
 
-<!-- PARTNER -->
+<!-- ══ PARTNER ══ -->
 <div id="pane-partner" class="pane">
   <div style="background:linear-gradient(135deg,#1a1a0d,#0d1a00);border:1px solid #ffaa0044;border-radius:14px;padding:16px;margin-bottom:12px">
     <div style="font-size:28px;margin-bottom:8px">🤝</div>
@@ -223,9 +207,9 @@ body{background:#0a0c10;color:#fff;font-family:'Courier New',monospace;padding-b
     <div style="color:#888;font-size:11px;margin-bottom:14px">Let Salman's bot trade your account</div>
     <div style="background:#ffaa0011;border:1px solid #ffaa0033;border-radius:10px;padding:12px;margin-bottom:14px;text-align:center">
       <div style="display:flex;align-items:center;justify-content:center;gap:16px">
-        <div><div class="g" style="font-size:34px;font-weight:700">50%</div><div style="color:#888;font-size:11px">You Keep</div></div>
+        <div><div style="color:#00d4aa;font-size:34px;font-weight:700">50%</div><div style="color:#888;font-size:11px">You Keep</div></div>
         <div style="color:#333;font-size:26px">|</div>
-        <div><div class="o" style="font-size:34px;font-weight:700">50%</div><div style="color:#888;font-size:11px">Salman Fee</div></div>
+        <div><div style="color:#ffaa00;font-size:34px;font-weight:700">50%</div><div style="color:#888;font-size:11px">Salman Fee</div></div>
       </div>
     </div>
     <a href="https://wa.me/971544735060?text=Partnership%2050%25" style="display:block;background:#25d366;color:#000;border-radius:8px;padding:10px;text-align:center;font-weight:700;font-size:12px;text-decoration:none">💬 Start Partnership</a>
@@ -233,144 +217,216 @@ body{background:#0a0c10;color:#fff;font-family:'Courier New',monospace;padding-b
   <div style="color:#555;font-size:10px;text-align:center">⚠️ No profit = no fee. Trading involves risk.</div>
 </div>
 
-<!-- ABOUT -->
+<!-- ══ ABOUT ══ -->
 <div id="pane-about" class="pane">
-  <div class="card"><div style="font-size:28px;margin-bottom:8px">🤖</div><div class="g" style="font-size:15px;font-weight:700;margin-bottom:4px">SalmanFX AI Bot</div><div style="color:#888;font-size:11px;margin-bottom:10px">Automated MT4+MT5 • Dubai 🇦🇪</div><div style="color:#ccc;font-size:12px;line-height:1.8">Runs 24/5 via Exness. 95%+ win rate with proper setup.</div></div>
+  <div class="card"><div style="font-size:28px;margin-bottom:8px">🤖</div><div style="color:#00d4aa;font-size:15px;font-weight:700;margin-bottom:4px">SalmanFX AI Bot</div><div style="color:#888;font-size:11px;margin-bottom:10px">Automated MT4+MT5 • Dubai 🇦🇪</div><div style="color:#ccc;font-size:12px;line-height:1.8">Runs 24/5 via Exness. 95%+ win rate with proper setup.</div></div>
   <div class="card"><a href="https://wa.me/971544735060" style="display:flex;align-items:center;gap:10px;text-decoration:none;background:#25d36622;border:1px solid #25d36644;border-radius:8px;padding:12px"><span style="font-size:22px">💬</span><div><div style="color:#25d366;font-weight:700">+971 54 473 5060</div><div style="color:#888;font-size:11px">WhatsApp — fast ⚡</div></div></a></div>
 </div>
 
-</div><!-- end padding -->
+</div>
 
 <a href="https://wa.me/971544735060" class="wa">💬</a>
 
 <!-- FULLSCREEN -->
-<div id="fs" style="display:none;position:fixed;inset:0;background:#0a0c10;z-index:9999;padding:24px 20px;text-align:center">
-  <button onclick="document.getElementById('fs').style.display='none'" style="position:absolute;top:16px;right:16px;background:#222;color:#fff;border:none;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:12px;font-family:monospace">✕ Exit</button>
-  <div style="margin-top:16px;color:#555;font-size:10px;letter-spacing:3px;margin-bottom:6px">SALMANFX AI BOT</div>
-  <div id="fsgold" class="y" style="font-size:52px;font-weight:700;margin-bottom:4px">—</div>
-  <div id="fsarrow" style="font-size:28px;margin-bottom:16px">—</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+<div id="fs" style="display:none;position:fixed;inset:0;background:#0a0c10;z-index:9999;padding:24px 20px;text-align:center;overflow-y:auto">
+  <button onclick="document.getElementById('fs').style.display='none'" style="position:absolute;top:16px;right:16px;background:#222;color:#fff;border:none;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:12px;font-family:monospace">✕</button>
+  <div style="margin-top:10px;color:#555;font-size:10px;letter-spacing:3px;margin-bottom:4px">SALMANFX AI BOT</div>
+  <div id="fsgold" style="color:#ffdd44;font-size:48px;font-weight:700;margin-bottom:2px">—</div>
+  <div id="fsarrow" style="font-size:24px;margin-bottom:14px">—</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
     <div style="background:#0d1a0d;border:1px solid #00d4aa33;border-radius:12px;padding:14px">
       <div style="color:#888;font-size:10px">MT4 Win Rate</div>
-      <div id="fs4wr" class="g" style="font-size:34px;font-weight:700">—</div>
-      <div id="fs4p" class="g" style="font-size:12px">—</div>
+      <div id="fs4wr" style="color:#00d4aa;font-size:32px;font-weight:700">—</div>
+      <div id="fs4p" style="color:#00d4aa;font-size:12px">—</div>
     </div>
     <div style="background:#0d0d1a;border:1px solid #5588ff33;border-radius:12px;padding:14px">
       <div style="color:#888;font-size:10px">MT5 Win Rate</div>
-      <div id="fs5wr" style="color:#5588ff;font-size:34px;font-weight:700">—</div>
+      <div id="fs5wr" style="color:#5588ff;font-size:32px;font-weight:700">—</div>
       <div id="fs5p" style="color:#5588ff;font-size:12px">—</div>
     </div>
   </div>
-  <div id="fsbox" style="background:#0d2a1e;border:3px solid #00d4aa44;border-radius:16px;padding:22px;margin-bottom:16px">
+  <div style="background:#1a1200;border:2px solid #ffaa0055;border-radius:14px;padding:18px;margin-bottom:14px">
+    <div style="color:#888;font-size:10px;margin-bottom:6px">🟡 TOTAL FLOATING P&L</div>
+    <div id="fsfl" style="color:#ffaa00;font-size:48px;font-weight:700">$0.00</div>
+    <div id="fsoc" style="color:#888;font-size:12px">0 open trades</div>
+  </div>
+  <div id="fsbox" style="background:#0d2a1e;border:3px solid #00d4aa44;border-radius:16px;padding:20px;margin-bottom:14px">
     <div id="fsacc" style="color:#888;font-size:11px;letter-spacing:1px;margin-bottom:4px">—</div>
     <div id="fsres" style="color:#888;font-size:28px;font-weight:700;margin-bottom:4px">Waiting...</div>
-    <div id="fsamt" style="color:#888;font-size:48px;font-weight:700;margin-bottom:4px">—</div>
+    <div id="fsamt" style="color:#888;font-size:46px;font-weight:700;margin-bottom:4px">—</div>
     <div id="fssym" style="color:#888;font-size:14px">—</div>
   </div>
   <div style="color:#888;font-size:11px">bot.dubairovers.com | +971 54 473 5060</div>
 </div>
 
 <script>
-const WS_URL      = "wss://unparcelled-flory-amelie.ngrok-free.dev";
-const SERVER_HTTP = "https://unparcelled-flory-amelie.ngrok-free.dev";
+const WS = "wss://unparcelled-flory-amelie.ngrok-free.dev";
 
 // State
 const A = {
-  mt4:{id:'mt4',trades:[],openTrades:[],totalProfit:0,wins:0,losses:0,winRate:0,balance:0,online:false},
-  mt5:{id:'mt5',trades:[],openTrades:[],totalProfit:0,wins:0,losses:0,winRate:0,balance:0,online:false}
+  mt4:{trades:[],openTrades:[],totalProfit:0,wins:0,losses:0,winRate:0,balance:0,equity:0,online:false},
+  mt5:{trades:[],openTrades:[],totalProfit:0,wins:0,losses:0,winRate:0,balance:0,equity:0,online:false}
 };
-let logs=[],gold=null,goldPrev=null,goldHi=null,goldLo=null,ws,rTimer;
-let hPeriod='all', hAcc='all'; // history filters — ALL TIME by default
+let gold=null,goldPrev=null,goldHi=null,goldLo=null,goldSim=null;
+let ws,rTimer,logs=[];
 
-// ── WebSocket ─────────────────────────────────────────
+// ─── Connect ────────────────────────────────────────
 function connect(){
-  try{ws=new WebSocket(WS_URL);}catch(e){setTimeout(connect,5000);return;}
-  ws.onopen=()=>{setBadge(true);log('✅ Connected','g');}; 
+  try{ws=new WebSocket(WS);}catch(e){clearTimeout(rTimer);rTimer=setTimeout(connect,5000);return;}
+  ws.onopen=()=>{badge(true);log('✅ Connected','g');};
   ws.onmessage=(e)=>{try{onMsg(JSON.parse(e.data));}catch(err){}};
-  ws.onclose=()=>{setBadge(false);log('⚠️ Disconnected','o');clearTimeout(rTimer);rTimer=setTimeout(connect,5000);};
+  ws.onclose=()=>{badge(false);log('⚠️ Reconnecting...','o');clearTimeout(rTimer);rTimer=setTimeout(connect,5000);};
 }
 
 function onMsg(m){
   if(m.type==='init'){
     m.accounts.forEach(a=>{const k=key(a.id,a.label);merge(k,a);});
-    if(m.goldPrice)setGold(m.goldPrice);
-    updateAll();log('📦 Loaded '+m.accounts.length+' accounts','g');
-    loadHistory(); // ← load history from API on connect
-    return;
+    if(m.goldPrice) setGold(m.goldPrice);
+    updateAll(); log('📦 Loaded '+m.accounts.length+' account(s)','g'); return;
   }
   if(m.type==='gold_price'){setGold(m.price,m.prev);return;}
   if(m.type==='heartbeat'){
-    const k=key(m.accountId,m.label);A[k].balance=m.balance||A[k].balance;A[k].online=true;
-    if(m.goldPrice&&!gold)setGold(m.goldPrice);
-    updAcc(k);updTotals();log('♥ '+m.label+' $'+m.balance,'g');return;
+    const k=key(m.accountId,m.label);
+    A[k].balance=m.balance||A[k].balance;
+    A[k].equity=m.equity||A[k].equity;
+    A[k].online=true;
+    if(m.goldPrice&&!gold) setGold(m.goldPrice);
+    updAcc(k); updTotals();
+    log('♥ '+m.label+' $'+m.balance,'g'); return;
   }
   if(m.type==='trade_open'){
-    const k=key(m.accountId,m.label);A[k].openTrades=A[k].openTrades.filter(t=>t.ticket!==m.trade.ticket);A[k].openTrades.push(m.trade);
-    renderOpen(k);log('→ OPEN '+m.trade.direction+' '+m.trade.symbol,'g');return;
+    const k=key(m.accountId,m.label);
+    // Replace if ticket exists, else add
+    A[k].openTrades=A[k].openTrades.filter(t=>t.ticket!==m.trade.ticket);
+    A[k].openTrades.push(m.trade);
+    renderOpen(k);
+    log('→ OPEN '+m.trade.direction+' '+m.trade.symbol+' @ '+m.trade.entry,'g'); return;
   }
   if(m.type==='trade_close'){
-    const k=key(m.accountId,m.label);A[k].trades.push(m.trade);A[k].openTrades=A[k].openTrades.filter(t=>t.ticket!==m.trade.ticket);
+    const k=key(m.accountId,m.label);
+    A[k].openTrades=A[k].openTrades.filter(t=>t.ticket!==m.trade.ticket);
+    A[k].trades.push(m.trade);
     if(m.stats){A[k].totalProfit=m.stats.totalProfit;A[k].wins=m.stats.wins;A[k].losses=m.stats.losses;A[k].winRate=m.stats.winRate;}
-    setLast(k,m.trade);renderOpen(k);updAcc(k);updTotals();
-    updateStats();
-    loadHistory(); // reload history after new trade
-    updateTikTok(k,m.trade);
-    log((m.trade.win?'✅':'❌')+' '+m.trade.symbol+' $'+m.trade.profit,m.trade.profit>=0?'g':'r');
-    return;
+    setLast(k,m.trade); renderOpen(k); updAcc(k); updTotals(); updStats(); updTikTok(k,m.trade);
+    log((m.trade.win?'✅':'❌')+' '+m.trade.symbol+' $'+m.trade.profit,m.trade.profit>=0?'g':'r'); return;
   }
-  if(m.type==='account_offline'){const k=key(m.accountId,'');if(A[k])A[k].online=false;updAcc(k);}
+  if(m.type==='account_offline'){const k=key(m.accountId,'');A[k].online=false;updAcc(k);}
 }
 
-function key(id,label){const l=(label||'').toLowerCase();return(id==='mt5'||l.includes('mt5'))?'mt5':'mt4';}
-function merge(k,d){const a=A[k];a.trades=d.trades||a.trades;a.openTrades=d.openTrades||a.openTrades;a.totalProfit=d.totalProfit||a.totalProfit;a.wins=d.wins||a.wins;a.losses=d.losses||a.losses;a.winRate=d.winRate||a.winRate;a.balance=d.balance||a.balance;a.online=d.online||a.online;}
+function key(id,label){return(id==='mt5'||(label||'').toLowerCase().includes('mt5'))?'mt5':'mt4';}
+function merge(k,d){const a=A[k];a.trades=d.trades||a.trades;a.openTrades=d.openTrades||a.openTrades;a.totalProfit=d.totalProfit||a.totalProfit;a.wins=d.wins||a.wins;a.losses=d.losses||a.losses;a.winRate=d.winRate||a.winRate;a.balance=d.balance||a.balance;a.equity=d.equity||a.equity;a.online=d.online||a.online;}
 
-// ── Gold ──────────────────────────────────────────────
-let goldSim=null;
+// ─── Gold ───────────────────────────────────────────
 function setGold(p,prev){
-  if(!p)return;
-  goldSim=parseFloat(p);
-  goldPrev=prev||gold||p;gold=goldSim;
-  if(!goldHi||p>goldHi)goldHi=p;if(!goldLo||p<goldLo)goldLo=p;
-  const up=p>goldPrev,fmt='$'+p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const arw=up?'▲':'▼',col=up?'#00d4aa':'#ff6666',diff=(p-goldPrev).toFixed(2);
-  E('gprice').textContent=fmt;E('gprice').style.color=up?'#00ff88':'#ffaa44';setTimeout(()=>E('gprice').style.color='#ffdd44',600);
-  E('garrow').textContent=arw;E('garrow').style.color=col;
-  E('gchg').textContent=(up?'+':'')+diff;E('gchg').style.color=col;
-  E('ghi').textContent='$'+(goldHi||p).toFixed(2);E('glo').textContent='$'+(goldLo||p).toFixed(2);
-  E('gtime').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});
-  E('tkgold').textContent=fmt;E('tkarrow').textContent=arw;E('tkarrow').style.color=col;
-  E('fsgold').textContent=fmt;E('fsarrow').textContent=arw;E('fsarrow').style.color=col;
+  if(!p) return;
+  goldSim=parseFloat(p); goldPrev=prev||gold||p; gold=goldSim;
+  if(!goldHi||p>goldHi) goldHi=p; if(!goldLo||p<goldLo) goldLo=p;
+  const up=p>goldPrev, fmt='$'+p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const col=up?'#00d4aa':'#ff6666', arw=up?'▲':'▼';
+  E('gp').textContent=fmt; E('gp').style.color=up?'#00ff88':'#ffaa44';
+  setTimeout(()=>E('gp').style.color='#ffdd44',600);
+  E('ga').textContent=arw; E('ga').style.color=col;
+  E('gc').textContent=(up?'+':'')+((p-goldPrev).toFixed(2)); E('gc').style.color=col;
+  E('gh').textContent='$'+(goldHi||p).toFixed(2);
+  E('gl').textContent='$'+(goldLo||p).toFixed(2);
+  E('gt').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});
+  E('tkgold').textContent=fmt; E('tkarrow').textContent=arw; E('tkarrow').style.color=col;
+  E('fsgold').textContent=fmt; E('fsarrow').textContent=arw; E('fsarrow').style.color=col;
 }
-setInterval(()=>{if(!goldSim)return;const t=(Math.random()-.5)*.3;goldSim=parseFloat((goldSim+t).toFixed(2));setGold(goldSim,gold);},1000);
+// Simulate tick every second
+setInterval(()=>{if(!goldSim)return;const t=(Math.random()-.5)*.25;goldSim=parseFloat((goldSim+t).toFixed(2));setGold(goldSim,gold);},1000);
 
-// ── Account UI ────────────────────────────────────────
-function updAcc(k){
-  const a=A[k],c=k==='mt4'?'#00d4aa':'#5588ff';
-  E('d'+k[2]+'').style.background=a.online?c:'#555';
-  const b=E('d'+k[2]+'badge');b.textContent=a.online?'⬤ LIVE':'⬤ OFFLINE';b.style.color=a.online?c:'#555';b.style.background=a.online?c+'22':'#55555522';b.style.borderColor=a.online?c+'44':'#55555544';
-  E('d'+k[2]+'t').textContent=a.trades.length||0;
-  const w=a.winRate||0;E('d'+k[2]+'w').textContent=w+'%';E('d'+k[2]+'w').style.color=w>=50?'#00d4aa':'#ff6666';
-  const pe=E('d'+k[2]+'p');pe.textContent=(a.totalProfit>=0?'+':'')+'$'+a.totalProfit.toFixed(2);pe.style.color=a.totalProfit>=0?'#00d4aa':'#ff6666';
-  E('d'+k[2]+'b').textContent=a.balance>0?'$'+parseFloat(a.balance).toLocaleString('en-US',{maximumFractionDigits:0}):'—';
-  // stats
-  E('st'+k[2]+'wr').textContent=w>0?w+'%':'—';const sp=E('st'+k[2]+'p');if(sp){sp.textContent=a.trades.length?(a.totalProfit>=0?'+':'')+'$'+a.totalProfit.toFixed(2):'—';sp.style.color=a.totalProfit>=0?'#00d4aa':'#ff6666';}
-  E('st'+k[2]+'t').textContent=(a.trades.length||0)+' trades';
-  // tiktok
-  E('tk'+k[2]+'wr').textContent=w>0?w+'%':'—';const tp=E('tk'+k[2]+'p');if(tp){tp.textContent=a.totalProfit?(a.totalProfit>=0?'+':'')+'$'+a.totalProfit.toFixed(0)+' profit':'—';}
-  E('fs'+k[2]+'wr').textContent=w>0?w+'%':'—';const fp=E('fs'+k[2]+'p');if(fp){fp.textContent=a.totalProfit?(a.totalProfit>=0?'+':'')+'$'+a.totalProfit.toFixed(0):'—';}
+// ─── Floating P&L — every second ────────────────────
+function calcFL(t){
+  if(!gold||!t||!t.entry) return 0;
+  const e=parseFloat(t.entry)||0, l=parseFloat(t.lots)||0.01;
+  const d=t.direction==='BUY'?(gold-e):(e-gold);
+  return parseFloat((d*l*100).toFixed(2));
 }
 
-function updTotals(){
-  const t=A.mt4.trades.length+A.mt5.trades.length,w=A.mt4.wins+A.mt5.wins,p=+(A.mt4.totalProfit+A.mt5.totalProfit).toFixed(2),wr=t>0?((w/t)*100).toFixed(1):0,bal=A.mt4.balance+A.mt5.balance;
-  E('ctrades').textContent=t;E('cwr').textContent=wr+'%';E('cwr').style.color=wr>=50?'#00d4aa':'#ff6666';
-  const cp=E('cprofit');cp.textContent=(p>=0?'+':'')+'$'+p.toFixed(0);cp.style.color=p>=0?'#00d4aa':'#ff6666';
-  E('cbal').textContent=bal>0?'$'+(bal/1000).toFixed(1)+'k':'—';
+setInterval(()=>{
+  if(!gold) return;
+  let totalFL=0, totalOpen=0;
+  ['mt4','mt5'].forEach(k=>{
+    const a=A[k];
+    if(!a.openTrades||!a.openTrades.length) return;
+    a.openTrades.forEach((t,i)=>{
+      const fl=calcFL(t);
+      totalFL+=fl; totalOpen++;
+      const el=E('fl-'+k+'-'+i);
+      if(el){el.textContent=(fl>=0?'+':'')+'$'+fl.toFixed(2);el.style.color=fl>=0?'#00d4aa':'#ff6666';}
+      const cp=E('cp-'+k+'-'+i);
+      if(cp) cp.textContent='$'+gold.toFixed(2);
+    });
+    // Update equity
+    const eq=a.balance+a.openTrades.reduce((s,t)=>s+calcFL(t),0);
+    E('d'+k[2]+'b').textContent='$'+eq.toLocaleString('en-US',{maximumFractionDigits:0});
+  });
+  // Combined equity
+  const totalBal=A.mt4.balance+A.mt5.balance;
+  const totalEq=totalBal+totalFL;
+  E('ce').textContent=totalEq>0?'$'+(totalEq/1000).toFixed(1)+'k':'—';
+  // TikTok floating
+  const fEl=E('tkfl'); if(fEl){fEl.textContent=(totalFL>=0?'+':'')+'$'+Math.abs(totalFL).toFixed(2);fEl.style.color=totalFL>=0?'#00d4aa':'#ff6666';}
+  const fEl2=E('fsfl'); if(fEl2){fEl2.textContent=(totalFL>=0?'+':'')+'$'+Math.abs(totalFL).toFixed(2);fEl2.style.color=totalFL>=0?'#00d4aa':'#ff6666';}
+  E('tkoc').textContent=totalOpen+' open trade'+(totalOpen!==1?'s':'');
+  E('fsoc').textContent=totalOpen+' open trade'+(totalOpen!==1?'s':'');
+},1000);
+
+// ─── Render Open Trades ──────────────────────────────
+function renderOpen(k){
+  const a=A[k], el=E('d'+k[2]+'open');
+  if(!el) return;
+  if(!a.openTrades||!a.openTrades.length){el.style.display='none';return;}
+  el.style.display='block';
+  const col=k==='mt4'?'#00d4aa':'#5588ff';
+  el.innerHTML=`<div style="color:#ffaa00;font-size:10px;font-weight:700;letter-spacing:1px;margin-bottom:8px">🟡 OPEN TRADES — LIVE P&L</div>`+
+  a.openTrades.map((t,i)=>{
+    const dc=t.direction==='BUY'?'#00d4aa':'#ff6666';
+    const fl=calcFL(t);
+    const flC=fl>=0?'#00d4aa':'#ff6666';
+    const hasSL=t.sl&&parseFloat(t.sl)>0;
+    const hasTP=t.tp&&parseFloat(t.tp)>0;
+    return `<div style="background:#0d1117;border:1px solid #2a3040;border-radius:10px;padding:12px;margin-bottom:8px">
+      <!-- Row 1: Direction + Symbol + Lots + Live P&L -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="background:${dc}22;color:${dc};border:1px solid ${dc}44;border-radius:4px;padding:3px 9px;font-size:11px;font-weight:700">${t.direction}</span>
+          <span style="color:#fff;font-size:15px;font-weight:700">${t.symbol}</span>
+          <span style="color:#555;font-size:10px">${t.lots} lots</span>
+        </div>
+        <span id="fl-${k}-${i}" style="font-size:16px;font-weight:700;color:${flC}">${fl>=0?'+':''}$${fl.toFixed(2)}</span>
+      </div>
+      <!-- Row 2: Entry → Current Price -->
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+        <div style="flex:1;background:#ffffff08;border-radius:6px;padding:6px 10px">
+          <div style="color:#555;font-size:9px;margin-bottom:2px">ENTRY</div>
+          <div style="color:#ffdd44;font-size:13px;font-weight:700">${parseFloat(t.entry).toFixed(2)}</div>
+        </div>
+        <div style="color:#333;font-size:18px">→</div>
+        <div style="flex:1;background:#ffffff08;border-radius:6px;padding:6px 10px">
+          <div style="color:#555;font-size:9px;margin-bottom:2px">NOW</div>
+          <div id="cp-${k}-${i}" style="color:#fff;font-size:13px;font-weight:700">${gold?'$'+gold.toFixed(2):'—'}</div>
+        </div>
+      </div>
+      <!-- Row 3: SL and TP -->
+      <div style="display:flex;gap:8px">
+        ${hasSL?`<div style="flex:1;background:#ff444411;border:1px solid #ff444433;border-radius:6px;padding:6px 10px">
+          <div style="color:#ff6666;font-size:9px;margin-bottom:2px">🛑 STOP LOSS</div>
+          <div style="color:#ff6666;font-size:13px;font-weight:700">${parseFloat(t.sl).toFixed(2)}</div>
+        </div>`:'<div style="flex:1;background:#ffffff08;border:1px solid #2a3040;border-radius:6px;padding:6px 10px"><div style="color:#555;font-size:9px;margin-bottom:2px">🛑 STOP LOSS</div><div style="color:#333;font-size:13px">None</div></div>'}
+        ${hasTP?`<div style="flex:1;background:#00d4aa11;border:1px solid #00d4aa33;border-radius:6px;padding:6px 10px">
+          <div style="color:#00d4aa;font-size:9px;margin-bottom:2px">🎯 TAKE PROFIT</div>
+          <div style="color:#00d4aa;font-size:13px;font-weight:700">${parseFloat(t.tp).toFixed(2)}</div>
+        </div>`:'<div style="flex:1;background:#ffffff08;border:1px solid #2a3040;border-radius:6px;padding:6px 10px"><div style="color:#555;font-size:9px;margin-bottom:2px">🎯 TAKE PROFIT</div><div style="color:#333;font-size:13px">None</div></div>'}
+      </div>
+    </div>`;
+  }).join('');
 }
 
-function updateAll(){updAcc('mt4');updAcc('mt5');updTotals();renderOpen('mt4');renderOpen('mt5');updateStats();}
-
+// ─── Last Closed Trade ───────────────────────────────
 function setLast(k,t){
-  const el=E('d'+k[2]+'last');if(!el||!t)return;
+  const el=E('d'+k[2]+'last'); if(!el||!t) return;
   el.innerHTML=`<div style="background:#ffffff08;border-radius:8px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center">
     <div style="display:flex;gap:8px;align-items:center">
       <span style="color:${t.direction==='BUY'?'#00d4aa':'#ff6666'};font-size:10px;font-weight:700">${t.direction}</span>
@@ -381,168 +437,64 @@ function setLast(k,t){
   </div>`;
 }
 
-function renderOpen(k){
-  const a=A[k],wrap=E('d'+k[2]+'open');
-  if(!wrap)return;
-  if(!a.openTrades||!a.openTrades.length){wrap.style.display='none';return;}
-  wrap.style.display='block';
-  wrap.innerHTML='<div style="color:#ffaa00;font-size:10px;font-weight:700;letter-spacing:1px;margin-bottom:6px">🟡 OPEN TRADES — LIVE P&L</div>'+
-    a.openTrades.map((t,i)=>{
-      const fl=calcFL(t);
-      const flCol=fl>=0?'#00d4aa':'#ff6666';
-      const dirCol=t.direction==='BUY'?'#00d4aa':'#ff6666';
-      return `<div class="opentrade" data-k="${k}" data-i="${i}" style="background:#ffffff08;border:1px solid #2a3040;border-radius:8px;padding:9px 12px;margin-bottom:5px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-          <div style="display:flex;gap:7px;align-items:center">
-            <span style="color:${dirCol};font-size:10px;font-weight:700;background:${dirCol}11;padding:2px 7px;border-radius:3px">${t.direction}</span>
-            <span style="color:#fff;font-size:13px;font-weight:700">${t.symbol}</span>
-            <span style="color:#555;font-size:10px">${t.lots} lots</span>
-          </div>
-          <span class="fl-${k}-${i}" style="font-size:14px;font-weight:700;color:${flCol}">${fl>=0?'+':''}$${fl.toFixed(2)}</span>
-        </div>
-        <div style="display:flex;gap:12px;font-size:10px">
-          <span><span style="color:#555">Entry </span><span style="color:#ffdd44">${parseFloat(t.entry).toFixed(3)}</span></span>
-          <span><span style="color:#555">Now </span><span class="cur-price" style="color:#fff">${gold?gold.toFixed(2):'—'}</span></span>
-          ${t.sl>0?`<span><span style="color:#555">SL </span><span style="color:#ff6666">${parseFloat(t.sl).toFixed(3)}</span></span>`:''}
-          ${t.tp>0?`<span><span style="color:#555">TP </span><span style="color:#00d4aa">${parseFloat(t.tp).toFixed(3)}</span></span>`:''}
-        </div>
-      </div>`;
-    }).join('');
+// ─── Account UI ──────────────────────────────────────
+function updAcc(k){
+  const a=A[k], c=k==='mt4'?'#00d4aa':'#5588ff';
+  E('d'+k[2]+'dot').style.background=a.online?c:'#555';
+  const b=E('d'+k[2]+'badge');
+  b.textContent=a.online?'⬤ LIVE':'⬤ OFFLINE';b.style.color=a.online?c:'#555';b.style.background=a.online?c+'22':'#55555522';b.style.borderColor=a.online?c+'44':'#55555544';
+  E('d'+k[2]+'t').textContent=a.trades.length||0;
+  const wr=a.winRate||0;
+  const wEl=E('d'+k[2]+'w');wEl.textContent=wr+'%';wEl.style.color=wr>=50?c:'#ff6666';
+  const pEl=E('d'+k[2]+'p');pEl.textContent=(a.totalProfit>=0?'+':'')+'$'+(a.totalProfit||0).toFixed(2);pEl.style.color=a.totalProfit>=0?'#00d4aa':'#ff6666';
+  E('d'+k[2]+'b').textContent=a.balance>0?'$'+parseFloat(a.balance).toLocaleString('en-US',{maximumFractionDigits:0}):'—';
+  // Stats tab
+  E('s'+k[2]+'wr').textContent=wr>0?wr+'%':'—';
+  const sp=E('s'+k[2]+'p');if(sp){sp.textContent=a.trades.length?(a.totalProfit>=0?'+':'')+'$'+a.totalProfit.toFixed(2):'—';sp.style.color=a.totalProfit>=0?'#00d4aa':'#ff6666';}
+  E('s'+k[2]+'t').textContent=(a.trades.length||0)+' trades';
+  E('s'+k[2]+'bal').textContent='Balance: $'+parseFloat(a.balance||0).toLocaleString('en-US',{maximumFractionDigits:0});
+  // TikTok
+  E('tk'+k[2]+'wr').textContent=wr>0?wr+'%':'—';
+  const tp=E('tk'+k[2]+'p');if(tp){tp.textContent=a.totalProfit?(a.totalProfit>=0?'+':'')+'$'+a.totalProfit.toFixed(0)+' profit':'—';}
+  E('fs'+k[2]+'wr').textContent=wr>0?wr+'%':'—';
+  const fp=E('fs'+k[2]+'p');if(fp){fp.textContent=a.totalProfit?(a.totalProfit>=0?'+':'')+'$'+a.totalProfit.toFixed(0):'—';}
 }
 
-// ── HISTORY — direct API fetch ─────────────────────────
-let allTrades=[];
-async function loadHistory(){
-  try{
-    const r=await fetch(SERVER_HTTP+'/trades',{headers:{'ngrok-skip-browser-warning':'true'}});
-    const d=await r.json();
-    allTrades=d.trades||[];
-    renderHistory();
-    updateStats();
-    log('📋 History: '+allTrades.length+' trades loaded','g');
-  }catch(e){log('⚠️ Cannot load history','o');}
+function updTotals(){
+  const t=A.mt4.trades.length+A.mt5.trades.length;
+  const w=A.mt4.wins+A.mt5.wins;
+  const p=+(A.mt4.totalProfit+A.mt5.totalProfit).toFixed(2);
+  const wr=t>0?((w/t)*100).toFixed(1):0;
+  E('ct').textContent=t;
+  E('cw').textContent=wr+'%';E('cw').style.color=wr>=50?'#00d4aa':'#ff6666';
+  const cp=E('cp');if(cp){cp.textContent=(p>=0?'+':'')+'$'+p.toFixed(0);cp.style.color=p>=0?'#00d4aa':'#ff6666';}
 }
 
-function renderHistory(){
-  const now=Date.now();
-  const filtered=allTrades.filter(t=>{
-    const dt=new Date(t.date||t.closeTime).getTime();
-    let ok=false;
-    if(hPeriod==='24h') ok=dt>=(now-86400000);
-    else if(hPeriod==='7d')  ok=dt>=(now-604800000);
-    else if(hPeriod==='30d') ok=dt>=(now-2592000000);
-    else ok=true; // ALL TIME
-    return ok&&(hAcc==='all'||t.accId===hAcc);
-  });
-
-  E('hloading').style.display='none';
-  const wins=filtered.filter(t=>t.win).length;
-  const profit=filtered.reduce((s,t)=>+(s+parseFloat(t.profit||0)).toFixed(2),0);
-  const wr=filtered.length>0?((wins/filtered.length)*100).toFixed(1):0;
-  E('hcnt').textContent=filtered.length;
-  E('hwr').textContent=wr+'%';E('hwr').style.color=wr>=50?'#00d4aa':'#ff6666';
-  const hp=E('hprofit');hp.textContent=(profit>=0?'+':'')+'$'+profit.toFixed(2);hp.style.color=profit>=0?'#00d4aa':'#ff6666';
-  E('hwins').textContent=wins;
-
-  if(!filtered.length){E('htable').style.display='none';E('hempty').style.display='block';return;}
-  E('htable').style.display='block';E('hempty').style.display='none';
-  const acC=id=>id==='mt4'?'#00d4aa':'#5588ff';
-  const acL=id=>id==='mt4'?'MT4':'MT5';
-  E('hlist').innerHTML=filtered.map(t=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1e2530">
-    <div>
-      <div style="display:flex;gap:6px;align-items:center;margin-bottom:3px">
-        <span style="background:${acC(t.accId)}22;color:${acC(t.accId)};font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;border:1px solid ${acC(t.accId)}33">${acL(t.accId)}</span>
-        <span style="color:${t.direction==='BUY'?'#00d4aa':'#ff6666'};font-size:10px;font-weight:700">${t.direction}</span>
-        <span style="color:#fff;font-size:12px">${t.symbol}</span>
-      </div>
-      <span style="color:#555;font-size:10px">${t.closeTime||''}</span>
-    </div>
-    <div style="text-align:right">
-      <div style="color:${t.profit>=0?'#00d4aa':'#ff6666'};font-weight:700;font-size:14px">${t.profit>=0?'+':''}$${parseFloat(t.profit||0).toFixed(2)}</div>
-      <div style="color:${t.win?'#00d4aa':'#ff6666'};font-size:10px">${t.win?'✅ WIN':'❌ LOSS'}</div>
-    </div>
-  </div>`).join('');
+function updStats(){
+  updAcc('mt4'); updAcc('mt5');
 }
 
-function hFilter(p,el){hPeriod=p;document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('on'));el.classList.add('on');renderHistory();}
-function aFilter(a,el){hAcc=a;['all','mt4','mt5'].forEach(k=>{const e=E('af-'+k);if(e)e.classList.remove('on');});el.classList.add('on');renderHistory();}
+function updateAll(){updAcc('mt4');updAcc('mt5');updTotals();renderOpen('mt4');renderOpen('mt5');}
 
-// ── Stats ──────────────────────────────────────────────
-function updateStats(){
-  if(!allTrades.length)return;
-  ['mt4','mt5'].forEach(k=>{
-    const trades=allTrades.filter(t=>t.accId===k);
-    const wins=trades.filter(t=>t.win).length;
-    const profit=trades.reduce((s,t)=>+(s+parseFloat(t.profit||0)).toFixed(2),0);
-    const wr=trades.length>0?((wins/trades.length)*100).toFixed(1):0;
-    E('st'+k[2]+'wr').textContent=wr>0?wr+'%':'—';
-    const sp=E('st'+k[2]+'p');if(sp){sp.textContent=trades.length?(profit>=0?'+':'')+'$'+profit.toFixed(2):'—';sp.style.color=profit>=0?'#00d4aa':'#ff6666';}
-    E('st'+k[2]+'t').textContent=trades.length+' trades';
-  });
-  const pairs={};allTrades.forEach(t=>{pairs[t.symbol]=(pairs[t.symbol]||0)+1;});
-  E('pairs').innerHTML=Object.entries(pairs).sort((a,b)=>b[1]-a[1]).map(([p,c])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1e2530"><span style="color:#fff">${p}</span><span style="color:#5588ff;font-weight:700">${c} trades</span></div>`).join('')||'—';
-}
-
-// ── TikTok ─────────────────────────────────────────────
-function updateTikTok(k,t){
+function updTikTok(k,t){
   const col=k==='mt4'?'#00d4aa':'#5588ff';
   ['tk','fs'].forEach(p=>{
     const r=E(p+'res'),am=E(p+'amt'),sy=E(p+'sym'),ac=E(p+'acc'),box=E(p+'box');
     if(r){r.textContent=t.win?'✅ WIN':'❌ LOSS';r.style.color=t.win?'#00d4aa':'#ff6666';}
     if(am){am.textContent=(t.profit>=0?'+':'')+'$'+parseFloat(t.profit||0).toFixed(2);am.style.color=t.profit>=0?'#00ff88':'#ff6666';}
-    if(sy)sy.textContent=(t.direction||'')+' '+(t.symbol||'');
+    if(sy) sy.textContent=(t.direction||'')+' '+(t.symbol||'');
     if(ac){ac.textContent=k.toUpperCase();ac.style.color=col;}
-    if(box)box.style.borderColor=col+'66';
+    if(box) box.style.borderColor=col+'66';
   });
 }
 
-// ── Floating P&L calculation ─────────────────────
-function calcFL(trade){
-  if(!gold||!trade||!trade.entry) return 0;
-  const entry=parseFloat(trade.entry)||0;
-  const lots=parseFloat(trade.lots)||0.01;
-  const diff=trade.direction==='BUY'?(gold-entry):(entry-gold);
-  return parseFloat((diff*lots*100).toFixed(2));
-}
-
-// Update floating P&L every second
-setInterval(()=>{
-  if(!gold) return;
-  let totalFL=0, totalOpen=0;
-  ['mt4','mt5'].forEach(k=>{
-    const a=A[k];
-    if(!a.openTrades||!a.openTrades.length) return;
-    let accFL=0;
-    a.openTrades.forEach((t,i)=>{
-      const fl=calcFL(t);
-      accFL+=fl;
-      const el=document.querySelector('.fl-'+k+'-'+i);
-      if(el){el.textContent=(fl>=0?'+':'')+'$'+fl.toFixed(2);el.style.color=fl>=0?'#00d4aa':'#ff6666';}
-      // update current price
-      document.querySelectorAll('.cur-price').forEach(e=>e.textContent=gold.toFixed(2));
-    });
-    totalFL+=accFL;
-    totalOpen+=a.openTrades.length;
-  });
-},1000);
-
-// ── Helpers ────────────────────────────────────────────
+function badge(on){const b=E('badge');b.textContent=on?'⬤ LIVE':'⬤ OFFLINE';b.style.color=on?'#00d4aa':'#ff6666';b.style.background=on?'#00d4aa22':'#ff444422';b.style.borderColor=on?'#00d4aa44':'#ff444444';}
+function sw(n,el){document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));E('pane-'+n).classList.add('on');el.classList.add('on');}
 function E(id){return document.getElementById(id);}
-function setBadge(on){const b=E('badge');b.textContent=on?'⬤ LIVE':'⬤ OFFLINE';b.style.color=on?'#00d4aa':'#ff6666';b.style.background=on?'#00d4aa22':'#ff444422';b.style.borderColor=on?'#00d4aa44':'#ff444444';}
-let logs2=[];
-function log(txt,type){
-  const t=new Date().toLocaleTimeString('en-US',{hour12:false});
-  logs2.unshift({txt,type,ts:'['+t+']'});if(logs2.length>50)logs2.pop();
-  const c={g:'#00d4aa',r:'#ff4444',o:'#ffaa00'};
-  E('lcnt').textContent=logs2.length+' events';
-  E('lbody').innerHTML=logs2.map(l=>`<div><span style="color:#444">${l.ts} </span><span style="color:${c[l.type]||'#888'}">${l.txt}</span></div>`).join('');
-}
-function sw(name,el){document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));E('pane-'+name).classList.add('on');el.classList.add('on');if(name==='history')loadHistory();}
+function log(t,c){const ts=new Date().toLocaleTimeString('en-US',{hour12:false});logs.unshift({t,c,ts:'['+ts+']'});if(logs.length>50)logs.pop();const cols={g:'#00d4aa',r:'#ff4444',o:'#ffaa00'};E('lcnt').textContent=logs.length+' events';E('lbody').innerHTML=logs.map(l=>`<div><span style="color:#444">${l.ts} </span><span style="color:${cols[l.c]||'#888'}">${l.t}</span></div>`).join('');}
+function updStats(){}
 
-// Start
 connect();
-// Reload history every 60 seconds automatically
-setInterval(loadHistory,60000);
 </script>
 </body>
 </html>
