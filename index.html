@@ -324,28 +324,34 @@ function onMsg(m){
 function key(id,label){return(id==='mt5'||(label||'').toLowerCase().includes('mt5'))?'mt5':'mt4';}
 function merge(k,d){const a=A[k];a.trades=d.trades||a.trades;a.openTrades=d.openTrades||a.openTrades;a.totalProfit=d.totalProfit||a.totalProfit;a.wins=d.wins||a.wins;a.losses=d.losses||a.losses;a.winRate=d.winRate||a.winRate;a.balance=d.balance||a.balance;a.equity=d.equity||a.equity;a.online=d.online||a.online;}
 
-// ─── Gold ───────────────────────────────────────────
+// ─── Gold — NO simulation, only real MT4 price ──────
 function setGold(p,prev){
-  if(!p) return;
-  goldSim=parseFloat(p); goldPrev=prev||gold||p; gold=goldSim;
-  if(!goldHi||p>goldHi) goldHi=p; if(!goldLo||p<goldLo) goldLo=p;
-  const up=p>goldPrev, fmt='$'+p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(!p||p<100) return;
+  const newP=parseFloat(parseFloat(p).toFixed(2));
+  goldPrev=gold||newP; gold=newP;
+  if(!goldHi||newP>goldHi) goldHi=newP;
+  if(!goldLo||newP<goldLo) goldLo=newP;
+  const up=newP>goldPrev, fmt='$'+newP.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   const col=up?'#00d4aa':'#ff6666', arw=up?'▲':'▼';
   E('gp').textContent=fmt; E('gp').style.color=up?'#00ff88':'#ffaa44';
   setTimeout(()=>E('gp').style.color='#ffdd44',600);
   E('ga').textContent=arw; E('ga').style.color=col;
-  E('gc').textContent=(up?'+':'')+((p-goldPrev).toFixed(2)); E('gc').style.color=col;
-  E('gh').textContent='$'+(goldHi||p).toFixed(2);
-  E('gl').textContent='$'+(goldLo||p).toFixed(2);
+  E('gc').textContent=(up?'+':'')+((newP-goldPrev).toFixed(2)); E('gc').style.color=col;
+  E('gh').textContent='$'+(goldHi||newP).toFixed(2);
+  E('gl').textContent='$'+(goldLo||newP).toFixed(2);
   E('gt').textContent=new Date().toLocaleTimeString('en-US',{hour12:false});
   E('tkgold').textContent=fmt; E('tkarrow').textContent=arw; E('tkarrow').style.color=col;
   E('fsgold').textContent=fmt; E('fsarrow').textContent=arw; E('fsarrow').style.color=col;
 }
-// Simulate tick every second
-setInterval(()=>{if(!goldSim)return;const t=(Math.random()-.5)*.25;goldSim=parseFloat((goldSim+t).toFixed(2));setGold(goldSim,gold);},1000);
+// NO fake simulation — gold only updates when MT4 sends real price
 
 // ─── Floating P&L — every second ────────────────────
 function calcFL(t){
+  // ✅ Use MT4's real profit sent every 30s in heartbeat
+  if(t.profit!==undefined&&t.profit!==null&&t.profit!==0){
+    return parseFloat(t.profit)||0;
+  }
+  // Fallback formula if no profit field yet
   if(!gold||!t||!t.entry) return 0;
   const e=parseFloat(t.entry)||0, l=parseFloat(t.lots)||0.01;
   const d=t.direction==='BUY'?(gold-e):(e-gold);
@@ -413,8 +419,7 @@ function renderOpen(k){
       <div style="color:#888;font-size:10px">${t.lots}</div>
       <div style="color:#ffdd44;font-size:10px;font-weight:700">${parseFloat(t.entry).toFixed(2)}</div>
       <div class="cp-${k}-${i}" style="color:#aaa;font-size:10px">${gold?gold.toFixed(2):'—'}</div>
-      <div id="fl-${k}-${i}" style="color:${flC};font-size:11px;font-weight:700;text-align:right">${fl>=0?'+':''}$${fl.toFixed(2)}</div>
-      <div style="color:#ff6666;font-size:10px">${sl}</div>
+      <div id="fl-${k}-${i}" style="color:${flC};font-size:11px;font-weight:700;text-align:right">${fl>=0?'+':''}$${fl.toFixed(2)}</div>      <div style="color:#ff6666;font-size:10px">${sl}</div>
       <div style="color:#00d4aa;font-size:10px">${tp}</div>
     </div>`;
   }).join('');
