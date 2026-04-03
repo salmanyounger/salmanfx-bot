@@ -70,9 +70,9 @@ body{background:#0a0c10;color:#fff;font-family:'Courier New',monospace;padding-b
   </div>
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
     <div style="text-align:center"><div style="color:#888;font-size:9px">Trades</div><div id="ct" style="color:#fff;font-size:20px;font-weight:700">—</div></div>
-    <div style="text-align:center"><div style="color:#888;font-size:9px">Win Rate</div><div id="cw" style="font-size:20px;font-weight:700;color:#00d4aa">—</div></div>
+    <div style="text-align:center"><div style="color:#888;font-size:9px">Strategy Win</div><div id="cw" style="font-size:20px;font-weight:700;color:#00d4aa">—</div></div>
     <div style="text-align:center"><div style="color:#888;font-size:9px">Profit</div><div id="cp" style="font-size:18px;font-weight:700;color:#00d4aa">—</div></div>
-    <div style="text-align:center"><div style="color:#888;font-size:9px">Equity</div><div id="ce" style="font-size:16px;font-weight:700;color:#ffdd44">—</div></div>
+    <div style="text-align:center"><div style="color:#888;font-size:9px">Return</div><div id="ce" style="font-size:16px;font-weight:700;color:#00d4aa">—</div></div>
   </div>
 </div>
 
@@ -475,12 +475,32 @@ function updAcc(k){
 
 function updTotals(){
   const t=A.mt4.trades.length+A.mt5.trades.length;
-  const w=A.mt4.wins+A.mt5.wins;
   const p=+(A.mt4.totalProfit+A.mt5.totalProfit).toFixed(2);
-  const wr=t>0?((w/t)*100).toFixed(1):0;
+  const bal=A.mt4.balance+A.mt5.balance;
+
+  // Basket win rate — group by symbol+day, if basket profit > 0 = WIN
+  const all=[...A.mt4.trades,...A.mt5.trades];
+  let bWins=0,bTotal=0;
+  if(all.length>0){
+    const baskets={};
+    all.forEach(tr=>{
+      const day=(tr.date||'').substring(0,10)||'x';
+      const bk=(tr.symbol||'x')+'_'+day;
+      if(!baskets[bk]) baskets[bk]=0;
+      baskets[bk]+=parseFloat(tr.profit||0);
+    });
+    Object.values(baskets).forEach(bp=>{bTotal++;if(bp>0)bWins++;});
+  }
+  const bwr=bTotal>0?Math.round(bWins/bTotal*100):0;
+  const ret=bal>0?((p/bal)*100).toFixed(1):0;
+
   E('ct').textContent=t;
-  E('cw').textContent=wr+'%';E('cw').style.color=wr>=50?'#00d4aa':'#ff6666';
-  const cp=E('cp');if(cp){cp.textContent=(p>=0?'+':'')+'$'+p.toFixed(0);cp.style.color=p>=0?'#00d4aa':'#ff6666';}
+  E('cw').textContent=bwr+'%';
+  E('cw').style.color=bwr>=80?'#00d4aa':bwr>=60?'#ffaa00':'#ff6666';
+  const cp=E('cp');
+  if(cp){cp.textContent=(p>=0?'+':'')+'$'+p.toFixed(0);cp.style.color=p>=0?'#00d4aa':'#ff6666';}
+  E('ce').textContent=(ret>0?'+':'')+ret+'%';
+  E('ce').style.color='#00d4aa';
 }
 
 function updStats(){
