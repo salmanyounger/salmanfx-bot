@@ -318,7 +318,7 @@ function onMsg(m){
     setLast(k,m.trade); renderOpen(k); updAcc(k); updTotals(); updStats(); updTikTok(k,m.trade);
     log((m.trade.win?'✅':'❌')+' '+m.trade.symbol+' $'+m.trade.profit,m.trade.profit>=0?'g':'r'); return;
   }
-  if(m.type==='account_offline'){const k=key(m.accountId,'');A[k].online=false;updAcc(k);}
+  if(m.type==='account_offline'){const k=key(m.accountId,'');A[k].online=false;A[k].openTrades=[];renderOpen(k);updAcc(k);}
 }
 
 function key(id,label){return(id==='mt5'||(label||'').toLowerCase().includes('mt5'))?'mt5':'mt4';}
@@ -391,7 +391,8 @@ setInterval(()=>{
 function renderOpen(k){
   const a=A[k], el=E('d'+k[2]+'open');
   if(!el) return;
-  if(!a.openTrades||!a.openTrades.length){el.style.display='none';return;}
+  // ✅ KEY FIX: never show stale data when offline
+  if(!a.online||!a.openTrades||!a.openTrades.length){el.style.display='none';return;}
   el.style.display='block';
   const col=k==='mt4'?'#00d4aa':'#5588ff';
 
